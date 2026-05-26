@@ -3,6 +3,7 @@ target/
 .idea/
 *.iml
 .vscode/
+.mvn/
 .DS_Store
 .classpath
 .project
