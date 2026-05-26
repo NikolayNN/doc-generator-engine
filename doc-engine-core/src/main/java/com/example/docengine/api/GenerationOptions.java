@@ -1,7 +1,6 @@
 package com.example.docengine.api;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
@@ -15,7 +14,7 @@ public record GenerationOptions(
             new GenerationOptions(null, null, null, Map.of());
 
     public GenerationOptions {
-        engineHints = engineHints == null ? Map.of() : Collections.unmodifiableMap(engineHints);
+        engineHints = engineHints == null ? Map.of() : Map.copyOf(engineHints);
     }
 
     public static GenerationOptions defaults() {

@@ -13,8 +13,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -47,53 +49,67 @@ public class LibreOfficeConverter implements DocumentConverter {
         }
 
         Path outDir = createOutDir(ctx);
-        Duration timeout = ctx.timeout() == null ? defaultTimeout : ctx.timeout();
-
-        ProcessBuilder pb = new ProcessBuilder(buildCommand(input, outDir))
-            .redirectErrorStream(false);
-        if (workingDir != null) {
-            pb.directory(workingDir.toFile());
-        }
-
-        Process process;
         try {
-            process = pb.start();
-        } catch (IOException e) {
-            throw new DocumentConversionException(ctx.templateHint(), from, to,
-                "failed to start LibreOffice: " + e.getMessage(), e, false);
-        }
+            Duration timeout = ctx.timeout() == null ? defaultTimeout : ctx.timeout();
 
-        String stderr;
-        boolean finished;
-        try {
-            stderr = readStderrAsync(process);
-            finished = process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            process.destroyForcibly();
-            Thread.currentThread().interrupt();
-            throw new DocumentConversionException(ctx.templateHint(), from, to,
-                "interrupted while waiting for LibreOffice", e, false);
-        }
+            ProcessBuilder pb = new ProcessBuilder(buildCommand(input, outDir))
+                .redirectErrorStream(false);
+            if (workingDir != null) {
+                pb.directory(workingDir.toFile());
+            }
 
-        if (!finished) {
-            process.destroyForcibly();
-            throw DocumentConversionException.timeout(ctx.templateHint(), from, to, timeout);
-        }
+            Process process;
+            try {
+                process = pb.start();
+            } catch (IOException e) {
+                throw new DocumentConversionException(ctx.templateHint(), from, to,
+                    "failed to start LibreOffice: " + e.getMessage(), e, false);
+            }
 
-        int exit = process.exitValue();
-        if (exit != 0) {
-            throw new DocumentConversionException(ctx.templateHint(), from, to,
-                "LibreOffice exited with code " + exit + "; stderr=" + truncate(stderr),
-                null, false);
-        }
+            String stderr;
+            boolean finished;
+            try {
+                stderr = readStderrAsync(process);
+                finished = process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                process.destroyForcibly();
+                Thread.currentThread().interrupt();
+                throw new DocumentConversionException(ctx.templateHint(), from, to,
+                    "interrupted while waiting for LibreOffice", e, false);
+            }
 
-        Path output = findOutputFile(input, outDir, to);
-        if (output == null) {
-            throw new DocumentConversionException(ctx.templateHint(), from, to,
-                "LibreOffice exited 0 but no output file in " + outDir, null, false);
+            if (!finished) {
+                process.destroyForcibly();
+                throw DocumentConversionException.timeout(ctx.templateHint(), from, to, timeout);
+            }
+
+            int exit = process.exitValue();
+            if (exit != 0) {
+                throw new DocumentConversionException(ctx.templateHint(), from, to,
+                    "LibreOffice exited with code " + exit + "; stderr=" + truncate(stderr),
+                    null, false);
+            }
+
+            Path produced = findOutputFile(input, outDir, to);
+            if (produced == null) {
+                throw new DocumentConversionException(ctx.templateHint(), from, to,
+                    "LibreOffice exited 0 but no output file in " + outDir, null, false);
+            }
+
+            Path managed = ctx.tempFileManager().createTempFile("doc-engine-pdf-", "." + to.extension());
+            try {
+                Files.move(produced, managed, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                // best-effort: clean managed file we just created
+                ctx.tempFileManager().delete(managed);
+                throw new DocumentConversionException(ctx.templateHint(), from, to,
+                    "failed to move LibreOffice output to managed temp file", e, false);
+            }
+            log.debug("converted {} -> {}", input, managed);
+            return managed;
+        } finally {
+            deleteRecursively(outDir);
         }
-        log.debug("converted {} -> {}", input, output);
-        return output;
     }
 
     private List<String> buildCommand(Path input, Path outDir) {
@@ -155,5 +171,16 @@ public class LibreOfficeConverter implements DocumentConverter {
     private static String truncate(String s) {
         if (s == null) return "";
         return s.length() <= STDERR_TRUNCATE ? s : s.substring(0, STDERR_TRUNCATE) + "...";
+    }
+
+    private static void deleteRecursively(Path dir) {
+        if (dir == null) return;
+        try (Stream<Path> walk = Files.walk(dir)) {
+            walk.sorted(Comparator.reverseOrder()).forEach(p -> {
+                try { Files.deleteIfExists(p); } catch (IOException ignored) {}
+            });
+        } catch (IOException ignored) {
+            // best-effort cleanup
+        }
     }
 }
