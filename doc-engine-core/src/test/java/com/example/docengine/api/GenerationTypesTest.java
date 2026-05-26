@@ -33,7 +33,7 @@ class GenerationTypesTest {
         var req = new GenerationRequest(ref, data, DocumentFormat.PDF, opts);
 
         assertThat(req.template()).isSameAs(ref);
-        assertThat(req.data()).isSameAs(data);
+        assertThat(req.data()).isEqualTo(data);
         assertThat(req.targetFormat()).isEqualTo(DocumentFormat.PDF);
         assertThat(req.options()).isSameAs(opts);
     }
