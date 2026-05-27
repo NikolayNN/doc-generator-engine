@@ -4,11 +4,37 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.example</groupId>
+    <groupId>io.github.nikolaynn</groupId>
     <artifactId>doc-generator-engine</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Document Generator Engine</name>
+    <description>Java library for generating documents from XLSX templates (JXLS) with optional PDF export via headless LibreOffice.</description>
+    <url>https://github.com/NikolayNN/doc-generator-engine</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>NikolayNN</id>
+            <name>Nikolay</name>
+            <email>nikolay.horushko@gmail.com</email>
+            <url>https://github.com/NikolayNN</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/NikolayNN/doc-generator-engine.git</connection>
+        <developerConnection>scm:git:git@github.com:NikolayNN/doc-generator-engine.git</developerConnection>
+        <url>https://github.com/NikolayNN/doc-generator-engine</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <modules>
         <module>doc-engine-core</module>
