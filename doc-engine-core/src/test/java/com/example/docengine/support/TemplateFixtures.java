@@ -1,6 +1,8 @@
 package com.example.docengine.support;
 
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Comment;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Drawing;
@@ -32,6 +34,7 @@ public final class TemplateFixtures {
     public static byte[] tableEach() throws IOException {
         try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sh = wb.createSheet("data");
+            CellStyle bordered = thinBorder(wb);
 
             Row header = sh.createRow(0);
             header.createCell(0).setCellValue("Name");
@@ -46,7 +49,14 @@ public final class TemplateFixtures {
 
             Row totals = sh.createRow(2);
             totals.createCell(0).setCellValue("Total");
+            totals.createCell(1).setCellValue("");
             totals.createCell(2).setCellFormula("SUM(C2:C2)");
+
+            for (int r = 0; r <= 2; r++) {
+                for (int c = 0; c <= 2; c++) {
+                    sh.getRow(r).getCell(c).setCellStyle(bordered);
+                }
+            }
 
             // Outer area on A1
             addAreaComment(wb, sh, header.getCell(0), 0, 0, 2, 3, "jx:area(lastCell=\"C3\")");
@@ -57,6 +67,15 @@ public final class TemplateFixtures {
             wb.write(out);
             return out.toByteArray();
         }
+    }
+
+    private static CellStyle thinBorder(Workbook wb) {
+        CellStyle s = wb.createCellStyle();
+        s.setBorderTop(BorderStyle.THIN);
+        s.setBorderBottom(BorderStyle.THIN);
+        s.setBorderLeft(BorderStyle.THIN);
+        s.setBorderRight(BorderStyle.THIN);
+        return s;
     }
 
     public static byte[] formulas() throws IOException {

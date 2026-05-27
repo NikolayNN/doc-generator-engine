@@ -10,6 +10,9 @@ import com.example.docengine.api.TemplateReference;
 import com.example.docengine.internal.jxls.JxlsTemplateEngine;
 import com.example.docengine.internal.libreoffice.LibreOfficeConverter;
 import com.example.docengine.internal.tempfile.DefaultTempFileManager;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -90,7 +93,25 @@ class EndToEndTest {
             assertThat(sh.getRow(1).getCell(1).getNumericCellValue()).isEqualTo(2.0);
             assertThat(sh.getRow(2).getCell(0).getStringCellValue()).isEqualTo("Gadget");
             assertThat(sh.getRow(2).getCell(1).getNumericCellValue()).isEqualTo(3.0);
+
+            // Borders from the template row must survive on every generated row,
+            // including the totals row that follows the jx:each block.
+            for (int r = 0; r <= 3; r++) {
+                Row row = sh.getRow(r);
+                for (int c = 0; c <= 2; c++) {
+                    assertCellHasThinBorders(row.getCell(c), "row " + r + " col " + c);
+                }
+            }
         }
+    }
+
+    private static void assertCellHasThinBorders(Cell cell, String where) {
+        assertThat(cell).as("cell at %s", where).isNotNull();
+        var style = cell.getCellStyle();
+        assertThat(style.getBorderTop()).as("top border at %s", where).isEqualTo(BorderStyle.THIN);
+        assertThat(style.getBorderBottom()).as("bottom border at %s", where).isEqualTo(BorderStyle.THIN);
+        assertThat(style.getBorderLeft()).as("left border at %s", where).isEqualTo(BorderStyle.THIN);
+        assertThat(style.getBorderRight()).as("right border at %s", where).isEqualTo(BorderStyle.THIN);
     }
 
     @Test
