@@ -17,6 +17,49 @@ Java-библиотека для генерации документов по о
 - Maven 3.8+
 - LibreOffice (`soffice` в PATH или явный путь) — только если нужна конвертация в PDF
 
+## Установка из GitHub Packages
+
+Артефакты публикуются в GitHub Packages. Для **публичных** пакетов GitHub всё равно требует аутентификации потребителя — это известное ограничение GitHub Packages, обойти его без переезда на Maven Central нельзя.
+
+### 1. Personal Access Token
+
+Создай classic PAT в GitHub с правом `read:packages` (или fine-grained token с доступом «Packages: Read»).
+
+### 2. `~/.m2/settings.xml`
+
+```xml
+<settings>
+    <servers>
+        <server>
+            <id>github-nikolaynn</id>
+            <username>ВАШ_GITHUB_LOGIN</username>
+            <password>ghp_xxxxxxxxxxxxxxxxxxxxxxxx</password>
+        </server>
+    </servers>
+</settings>
+```
+
+### 3. `pom.xml` потребителя
+
+```xml
+<repositories>
+    <repository>
+        <id>github-nikolaynn</id>
+        <url>https://maven.pkg.github.com/NikolayNN/doc-generator-engine</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>io.github.nikolaynn</groupId>
+        <artifactId>doc-engine-spring-boot-starter</artifactId>
+        <version>0.1.0</version>
+    </dependency>
+</dependencies>
+```
+
+`id` репозитория в `<repositories>` должен совпадать с `id` сервера в `settings.xml`.
+
 ## Быстрый старт — plain Java
 
 ```java
@@ -53,9 +96,9 @@ GenerationResult result = engine.generate(request);
 
 ```xml
 <dependency>
-    <groupId>com.example</groupId>
+    <groupId>io.github.nikolaynn</groupId>
     <artifactId>doc-engine-spring-boot-starter</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
