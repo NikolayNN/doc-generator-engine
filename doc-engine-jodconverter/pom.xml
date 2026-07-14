@@ -16,8 +16,12 @@
     <dependencies>
         <dependency>
             <groupId>io.github.nikolaynn</groupId>
+            <artifactId>doc-engine-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.nikolaynn</groupId>
             <artifactId>doc-engine-core</artifactId>
-            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jodconverter</groupId>
