@@ -1,7 +1,7 @@
 {
   "properties": [
     { "name": "doc-engine.temp-dir", "type": "java.nio.file.Path", "description": "Directory for temporary files; unset uses the system temp dir." },
-    { "name": "doc-engine.cleanup-on-shutdown", "type": "java.lang.Boolean", "description": "Delete tracked temp files on JVM shutdown.", "defaultValue": true },
+    { "name": "doc-engine.cleanup-on-shutdown", "type": "java.lang.Boolean", "description": "Delete tracked temp files on JVM shutdown.", "defaultValue": false },
     { "name": "doc-engine.converter.libreoffice.enabled", "type": "java.lang.Boolean", "description": "Whether the process-based LibreOffice converter is created.", "defaultValue": true },
     { "name": "doc-engine.converter.libreoffice.executable", "type": "java.nio.file.Path", "description": "Path to the soffice executable; unset looks it up on PATH." },
     { "name": "doc-engine.converter.libreoffice.timeout", "type": "java.time.Duration", "description": "Per-conversion timeout for the process-based LibreOffice converter.", "defaultValue": "60s" },
