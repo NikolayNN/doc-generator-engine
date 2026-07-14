@@ -1,6 +1,8 @@
 package com.example.docengine.api;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -14,7 +16,10 @@ public record GenerationOptions(
             new GenerationOptions(null, null, null, Map.of());
 
     public GenerationOptions {
-        engineHints = engineHints == null ? Map.of() : Map.copyOf(engineHints);
+        // null-tolerant copy: Map.copyOf rejects null values
+        engineHints = engineHints == null
+            ? Map.of()
+            : Collections.unmodifiableMap(new LinkedHashMap<>(engineHints));
     }
 
     public static GenerationOptions defaults() {

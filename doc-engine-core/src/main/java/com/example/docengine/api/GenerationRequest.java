@@ -1,5 +1,7 @@
 package com.example.docengine.api;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -12,7 +14,9 @@ public record GenerationRequest(
     public GenerationRequest {
         Objects.requireNonNull(template, "template");
         Objects.requireNonNull(targetFormat, "targetFormat");
-        data = data == null ? Map.of() : Map.copyOf(data);
+        // null-tolerant copy: template data legitimately contains null values,
+        // which Map.copyOf would reject
+        data = data == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(data));
         options = options == null ? GenerationOptions.defaults() : options;
     }
 }

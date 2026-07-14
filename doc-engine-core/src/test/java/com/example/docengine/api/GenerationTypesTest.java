@@ -3,6 +3,7 @@ package com.example.docengine.api;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,6 +56,32 @@ class GenerationTypesTest {
         var req = new GenerationRequest(ref, null, DocumentFormat.PDF, null);
         assertThat(req.data()).isEmpty();
         assertThat(req.options()).isEqualTo(GenerationOptions.defaults());
+    }
+
+    @Test
+    void requestAllowsNullDataValues() {
+        var ref = new TemplateReference.BytesRef(new byte[]{1}, DocumentFormat.XLSX, "h");
+        Map<String, Object> data = new HashMap<>();
+        data.put("middleName", null);
+
+        var req = new GenerationRequest(ref, data, DocumentFormat.PDF, null);
+
+        assertThat(req.data()).containsKey("middleName");
+        assertThat(req.data().get("middleName")).isNull();
+        assertThatThrownBy(() -> req.data().put("x", "y"))
+            .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void optionsAllowNullEngineHintValues() {
+        Map<String, Object> hints = new HashMap<>();
+        hints.put("evaluateFormulas", null);
+
+        var opts = new GenerationOptions(null, null, null, hints);
+
+        assertThat(opts.engineHints()).containsKey("evaluateFormulas");
+        assertThatThrownBy(() -> opts.engineHints().put("x", "y"))
+            .isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
