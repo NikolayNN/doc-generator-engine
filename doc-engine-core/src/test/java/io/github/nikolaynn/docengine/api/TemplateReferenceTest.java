@@ -49,6 +49,25 @@ class TemplateReferenceTest {
     }
 
     @Test
+    void bytesRefEqualityIsValueBasedOnContent() {
+        var a = new TemplateReference.BytesRef(new byte[]{1, 2, 3}, DocumentFormat.XLSX, "r");
+        var b = new TemplateReference.BytesRef(new byte[]{1, 2, 3}, DocumentFormat.XLSX, "r");
+        assertThat(a).isEqualTo(b);
+        assertThat(a).hasSameHashCodeAs(b);
+    }
+
+    @Test
+    void bytesRefDiffersOnContentFormatOrHint() {
+        var base = new TemplateReference.BytesRef(new byte[]{1, 2, 3}, DocumentFormat.XLSX, "r");
+        assertThat(base).isNotEqualTo(
+            new TemplateReference.BytesRef(new byte[]{1, 2, 4}, DocumentFormat.XLSX, "r"));
+        assertThat(base).isNotEqualTo(
+            new TemplateReference.BytesRef(new byte[]{1, 2, 3}, DocumentFormat.PDF, "r"));
+        assertThat(base).isNotEqualTo(
+            new TemplateReference.BytesRef(new byte[]{1, 2, 3}, DocumentFormat.XLSX, "other"));
+    }
+
+    @Test
     void customReferenceTypeResolvesThroughCustomResolver() throws Exception {
         // a third-party reference type, e.g. a key into S3/classpath/DB storage
         record KeyRef(String key, DocumentFormat sourceFormat, String hint) implements TemplateReference {}
