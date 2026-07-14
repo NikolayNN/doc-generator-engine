@@ -17,6 +17,7 @@ public class DefaultTempFileManager implements TempFileManager {
 
     private final Path rootDir;
     private final Set<Path> tracked = new CopyOnWriteArraySet<>();
+    private final Thread shutdownHook;
 
     public DefaultTempFileManager(Path rootDir, boolean cleanupOnShutdown) {
         this.rootDir = rootDir;
@@ -29,7 +30,22 @@ public class DefaultTempFileManager implements TempFileManager {
             }
         }
         if (cleanupOnShutdown) {
-            Runtime.getRuntime().addShutdownHook(new Thread(this::cleanupAll, "doc-engine-temp-cleanup"));
+            this.shutdownHook = new Thread(this::cleanupAll, "doc-engine-temp-cleanup");
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+        } else {
+            this.shutdownHook = null;
+        }
+    }
+
+    @Override
+    public void close() {
+        cleanupAll();
+        if (shutdownHook != null) {
+            try {
+                Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            } catch (IllegalStateException ignored) {
+                // JVM is already shutting down; the hook will run (or has run) anyway
+            }
         }
     }
 

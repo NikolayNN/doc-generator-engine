@@ -12,6 +12,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -43,6 +44,27 @@ class DocumentEngineBuilderTest {
             .build();
 
         assertThat(engine).isNotNull();
+    }
+
+    @Test
+    void engineCloseClosesTempFileManager() {
+        AtomicBoolean closed = new AtomicBoolean();
+        TempFileManager mgr = new TempFileManager() {
+            @Override public Path createTempFile(String prefix, String suffix) {
+                throw new UnsupportedOperationException();
+            }
+            @Override public void delete(Path path) {}
+            @Override public void close() { closed.set(true); }
+        };
+
+        try (DocumentEngine engine = DocumentEngineBuilder.create()
+                .tempFileManager(mgr)
+                .addTemplateEngine(mock(TemplateEngine.class))
+                .build()) {
+            assertThat(closed).isFalse();
+        }
+
+        assertThat(closed).isTrue();
     }
 
     @Test

@@ -78,6 +78,28 @@ class DefaultTempFileManagerTest {
     }
 
     @Test
+    void closeDeletesTrackedFilesAndIsIdempotent(@TempDir Path tmp) {
+        var mgr = new DefaultTempFileManager(tmp, false);
+        Path file = mgr.createTempFile("c-", ".tmp");
+        assertThat(file).exists();
+
+        mgr.close();
+
+        assertThat(file).doesNotExist();
+        mgr.close(); // second close must be a no-op
+    }
+
+    @Test
+    void closeCleansUpEvenWithShutdownHookRegistered(@TempDir Path tmp) {
+        var mgr = new DefaultTempFileManager(tmp, true);
+        Path file = mgr.createTempFile("h-", ".tmp");
+
+        mgr.close();
+
+        assertThat(file).doesNotExist();
+    }
+
+    @Test
     void constructorFailsFastWhenRootDirCannotBeCreated(@TempDir Path tmp) throws Exception {
         Path blocker = Files.writeString(tmp.resolve("blocker"), "x");
         Path invalidRoot = blocker.resolve("sub"); // parent is a regular file
