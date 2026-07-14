@@ -110,6 +110,16 @@ class DocEngineAutoConfigurationTest {
     }
 
     @Test
+    void cleanupOnShutdownDefaultsToTrue() {
+        runner.run(ctx -> {
+            DocEngineProperties p = ctx.getBean(DocEngineProperties.class);
+            assertThat(p.cleanupOnShutdown())
+                .as("cleanup-on-shutdown must default to true, matching plain-Java withDefaults()")
+                .isTrue();
+        });
+    }
+
+    @Test
     void registeredViaAutoConfigurationImportsForBoot3() {
         ImportCandidates candidates =
             ImportCandidates.load(AutoConfiguration.class, getClass().getClassLoader());

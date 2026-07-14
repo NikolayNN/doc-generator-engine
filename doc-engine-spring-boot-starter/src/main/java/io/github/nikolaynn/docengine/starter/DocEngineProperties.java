@@ -1,6 +1,7 @@
 package io.github.nikolaynn.docengine.starter;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 
 import java.nio.file.Path;
 import java.time.Duration;
@@ -9,13 +10,13 @@ import java.time.Duration;
  * Configuration for the doc-engine Spring Boot starter, bound from {@code doc-engine.*}.
  *
  * @param tempDir directory for temporary files; {@code null} uses the system temp dir
- * @param cleanupOnShutdown delete tracked temp files on JVM shutdown
+ * @param cleanupOnShutdown delete tracked temp files on JVM shutdown (default {@code true})
  * @param converter converter configuration
  */
 @ConfigurationProperties("doc-engine")
 public record DocEngineProperties(
         Path tempDir,
-        boolean cleanupOnShutdown,
+        @DefaultValue("true") boolean cleanupOnShutdown,
         Converter converter
 ) {
     public DocEngineProperties {
