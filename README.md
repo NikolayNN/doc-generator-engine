@@ -149,7 +149,7 @@ doc-engine:
 
 ## Расширение через SPI
 
-Все точки расширения — в пакете `com.example.docengine.spi`:
+Все точки расширения — в пакете `io.github.nikolaynn.docengine.spi`:
 
 | SPI | Назначение |
 |---|---|

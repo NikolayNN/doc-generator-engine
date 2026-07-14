@@ -92,7 +92,7 @@ LibreOffice — не Java-зависимость, ожидается в окру
 
 ### 3.3 Базовый Java-пакет
 
-В этом документе используется конвенциональный плейсхолдер `com.example.docengine` / `com.example.docengine.starter`. Окончательное имя базового пакета выбирается на этапе implementation plan (предположительно по namespace owning-проекта).
+В этом документе используется конвенциональный плейсхолдер `io.github.nikolaynn.docengine` / `io.github.nikolaynn.docengine.starter`. Окончательное имя базового пакета выбирается на этапе implementation plan (предположительно по namespace owning-проекта).
 
 ## 4. Контракты
 
@@ -376,7 +376,7 @@ public class DocEngineAutoConfiguration {
 
 ```properties
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.example.docengine.starter.DocEngineAutoConfiguration
+io.github.nikolaynn.docengine.starter.DocEngineAutoConfiguration
 ```
 
 ### 7.3 Зависимости стартера

@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.example.docengine.starter.DocEngineAutoConfiguration
+io.github.nikolaynn.docengine.starter.DocEngineAutoConfiguration

@@ -16,7 +16,7 @@
 - Spring Boot 2.7.18 (starter target; works on 3.x as well via `spring.factories`)
 - LibreOffice — external binary (`soffice`), provided by environment
 
-**Base package placeholder:** All sources use `com.example.docengine.*`. If the consuming project requires a different package, refactor once at the very end (every task must be re-checked).
+**Base package placeholder:** All sources use `io.github.nikolaynn.docengine.*`. If the consuming project requires a different package, refactor once at the very end (every task must be re-checked).
 
 ---
 
@@ -388,7 +388,7 @@ git commit -m "build: Maven multi-module skeleton with core + Spring Boot starte
 `doc-engine-core/src/test/java/com/example/docengine/api/DocumentFormatTest.java`:
 
 ```java
-package com.example.docengine.api;
+package io.github.nikolaynn.docengine.api;
 
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -420,7 +420,7 @@ Expected: compile error — `DocumentFormat` does not exist.
 `doc-engine-core/src/main/java/com/example/docengine/api/DocumentFormat.java`:
 
 ```java
-package com.example.docengine.api;
+package io.github.nikolaynn.docengine.api;
 
 public enum DocumentFormat {
     XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
@@ -465,7 +465,7 @@ git commit -m "feat(core): add DocumentFormat enum with XLSX and PDF"
 `doc-engine-core/src/test/java/com/example/docengine/api/TemplateReferenceTest.java`:
 
 ```java
-package com.example.docengine.api;
+package io.github.nikolaynn.docengine.api;
 
 import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
@@ -523,7 +523,7 @@ Expected: compile error.
 `doc-engine-core/src/main/java/com/example/docengine/api/TemplateReference.java`:
 
 ```java
-package com.example.docengine.api;
+package io.github.nikolaynn.docengine.api;
 
 import java.io.InputStream;
 import java.util.Objects;
@@ -581,7 +581,7 @@ git commit -m "feat(core): add sealed TemplateReference with BytesRef and InputS
 `doc-engine-core/src/test/java/com/example/docengine/api/GenerationTypesTest.java`:
 
 ```java
-package com.example.docengine.api;
+package io.github.nikolaynn.docengine.api;
 
 import org.junit.jupiter.api.Test;
 
@@ -662,7 +662,7 @@ Expected: compile error.
 `doc-engine-core/src/main/java/com/example/docengine/api/GenerationOptions.java`:
 
 ```java
-package com.example.docengine.api;
+package io.github.nikolaynn.docengine.api;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -693,7 +693,7 @@ public record GenerationOptions(
 `doc-engine-core/src/main/java/com/example/docengine/api/GenerationRequest.java`:
 
 ```java
-package com.example.docengine.api;
+package io.github.nikolaynn.docengine.api;
 
 import java.util.Collections;
 import java.util.Map;
@@ -719,7 +719,7 @@ public record GenerationRequest(
 `doc-engine-core/src/main/java/com/example/docengine/api/GenerationResult.java`:
 
 ```java
-package com.example.docengine.api;
+package io.github.nikolaynn.docengine.api;
 
 import java.util.Objects;
 
@@ -766,9 +766,9 @@ git commit -m "feat(core): add GenerationOptions, GenerationRequest, GenerationR
 `doc-engine-core/src/test/java/com/example/docengine/api/exception/DocumentGenerationExceptionTest.java`:
 
 ```java
-package com.example.docengine.api.exception;
+package io.github.nikolaynn.docengine.api.exception;
 
-import com.example.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -825,9 +825,9 @@ Expected: compile errors.
 `doc-engine-core/src/main/java/com/example/docengine/api/exception/DocumentGenerationException.java`:
 
 ```java
-package com.example.docengine.api.exception;
+package io.github.nikolaynn.docengine.api.exception;
 
-import com.example.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
 
 public abstract class DocumentGenerationException extends RuntimeException {
 
@@ -870,7 +870,7 @@ public abstract class DocumentGenerationException extends RuntimeException {
 `InvalidGenerationRequestException.java`:
 
 ```java
-package com.example.docengine.api.exception;
+package io.github.nikolaynn.docengine.api.exception;
 
 public class InvalidGenerationRequestException extends DocumentGenerationException {
     public InvalidGenerationRequestException(String message) {
@@ -882,9 +882,9 @@ public class InvalidGenerationRequestException extends DocumentGenerationExcepti
 `TemplateResolutionException.java`:
 
 ```java
-package com.example.docengine.api.exception;
+package io.github.nikolaynn.docengine.api.exception;
 
-import com.example.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
 
 public class TemplateResolutionException extends DocumentGenerationException {
     public TemplateResolutionException(String templateHint, DocumentFormat sourceFormat,
@@ -897,9 +897,9 @@ public class TemplateResolutionException extends DocumentGenerationException {
 `TemplateValidationException.java`:
 
 ```java
-package com.example.docengine.api.exception;
+package io.github.nikolaynn.docengine.api.exception;
 
-import com.example.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
 
 public class TemplateValidationException extends DocumentGenerationException {
     public TemplateValidationException(String templateHint, DocumentFormat sourceFormat, String message) {
@@ -911,9 +911,9 @@ public class TemplateValidationException extends DocumentGenerationException {
 `TemplateRenderingException.java`:
 
 ```java
-package com.example.docengine.api.exception;
+package io.github.nikolaynn.docengine.api.exception;
 
-import com.example.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
 
 public class TemplateRenderingException extends DocumentGenerationException {
     public TemplateRenderingException(String templateHint,
@@ -929,9 +929,9 @@ public class TemplateRenderingException extends DocumentGenerationException {
 `UnsupportedTemplateFormatException.java`:
 
 ```java
-package com.example.docengine.api.exception;
+package io.github.nikolaynn.docengine.api.exception;
 
-import com.example.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
 
 public class UnsupportedTemplateFormatException extends DocumentGenerationException {
     public UnsupportedTemplateFormatException(String templateHint, DocumentFormat sourceFormat) {
@@ -944,9 +944,9 @@ public class UnsupportedTemplateFormatException extends DocumentGenerationExcept
 `UnsupportedConversionException.java`:
 
 ```java
-package com.example.docengine.api.exception;
+package io.github.nikolaynn.docengine.api.exception;
 
-import com.example.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
 
 public class UnsupportedConversionException extends DocumentGenerationException {
     public UnsupportedConversionException(String templateHint,
@@ -961,9 +961,9 @@ public class UnsupportedConversionException extends DocumentGenerationException 
 `DocumentConversionException.java`:
 
 ```java
-package com.example.docengine.api.exception;
+package io.github.nikolaynn.docengine.api.exception;
 
-import com.example.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
 import java.time.Duration;
 
 public class DocumentConversionException extends DocumentGenerationException {
@@ -997,9 +997,9 @@ public class DocumentConversionException extends DocumentGenerationException {
 `TempFileException.java`:
 
 ```java
-package com.example.docengine.api.exception;
+package io.github.nikolaynn.docengine.api.exception;
 
-import com.example.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
 
 public class TempFileException extends DocumentGenerationException {
     public TempFileException(String templateHint,
@@ -1038,9 +1038,9 @@ git commit -m "feat(core): add DocumentGenerationException hierarchy"
 `doc-engine-core/src/test/java/com/example/docengine/spi/ContextRecordsTest.java`:
 
 ```java
-package com.example.docengine.spi;
+package io.github.nikolaynn.docengine.spi;
 
-import com.example.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -1098,9 +1098,9 @@ Expected: compile error.
 `doc-engine-core/src/main/java/com/example/docengine/spi/ResolvedTemplate.java`:
 
 ```java
-package com.example.docengine.spi;
+package io.github.nikolaynn.docengine.spi;
 
-import com.example.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
 
 import java.util.Objects;
 
@@ -1115,7 +1115,7 @@ public record ResolvedTemplate(byte[] bytes, DocumentFormat sourceFormat, String
 `doc-engine-core/src/main/java/com/example/docengine/spi/RenderContext.java`:
 
 ```java
-package com.example.docengine.spi;
+package io.github.nikolaynn.docengine.spi;
 
 import java.time.Duration;
 import java.util.Locale;
@@ -1139,7 +1139,7 @@ public record RenderContext(
 `doc-engine-core/src/main/java/com/example/docengine/spi/ConvertContext.java`:
 
 ```java
-package com.example.docengine.spi;
+package io.github.nikolaynn.docengine.spi;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -1156,7 +1156,7 @@ public record ConvertContext(Duration timeout, TempFileManager tempFileManager, 
 `doc-engine-core/src/main/java/com/example/docengine/spi/TempFileManager.java`:
 
 ```java
-package com.example.docengine.spi;
+package io.github.nikolaynn.docengine.spi;
 
 import java.nio.file.Path;
 
@@ -1169,9 +1169,9 @@ public interface TempFileManager {
 `doc-engine-core/src/main/java/com/example/docengine/spi/TemplateResolver.java`:
 
 ```java
-package com.example.docengine.spi;
+package io.github.nikolaynn.docengine.spi;
 
-import com.example.docengine.api.TemplateReference;
+import io.github.nikolaynn.docengine.api.TemplateReference;
 
 public interface TemplateResolver {
     ResolvedTemplate resolve(TemplateReference ref);
@@ -1181,9 +1181,9 @@ public interface TemplateResolver {
 `doc-engine-core/src/main/java/com/example/docengine/spi/TemplateValidator.java`:
 
 ```java
-package com.example.docengine.spi;
+package io.github.nikolaynn.docengine.spi;
 
-import com.example.docengine.api.TemplateReference;
+import io.github.nikolaynn.docengine.api.TemplateReference;
 
 public interface TemplateValidator {
     void validate(TemplateReference ref);
@@ -1193,9 +1193,9 @@ public interface TemplateValidator {
 `doc-engine-core/src/main/java/com/example/docengine/spi/TemplateEngine.java`:
 
 ```java
-package com.example.docengine.spi;
+package io.github.nikolaynn.docengine.spi;
 
-import com.example.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -1211,9 +1211,9 @@ public interface TemplateEngine {
 `doc-engine-core/src/main/java/com/example/docengine/spi/DocumentConverter.java`:
 
 ```java
-package com.example.docengine.spi;
+package io.github.nikolaynn.docengine.spi;
 
-import com.example.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
 
 import java.nio.file.Path;
 
@@ -1251,9 +1251,9 @@ git commit -m "feat(core): add SPI interfaces and context records"
 `doc-engine-core/src/test/java/com/example/docengine/internal/tempfile/DefaultTempFileManagerTest.java`:
 
 ```java
-package com.example.docengine.internal.tempfile;
+package io.github.nikolaynn.docengine.internal.tempfile;
 
-import com.example.docengine.api.exception.TempFileException;
+import io.github.nikolaynn.docengine.api.exception.TempFileException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -1329,10 +1329,10 @@ Expected: compile error.
 `doc-engine-core/src/main/java/com/example/docengine/internal/tempfile/DefaultTempFileManager.java`:
 
 ```java
-package com.example.docengine.internal.tempfile;
+package io.github.nikolaynn.docengine.internal.tempfile;
 
-import com.example.docengine.api.exception.TempFileException;
-import com.example.docengine.spi.TempFileManager;
+import io.github.nikolaynn.docengine.api.exception.TempFileException;
+import io.github.nikolaynn.docengine.spi.TempFileManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1419,10 +1419,10 @@ git commit -m "feat(core): add DefaultTempFileManager with shutdown cleanup"
 `doc-engine-core/src/test/java/com/example/docengine/internal/validator/NoopTemplateValidatorTest.java`:
 
 ```java
-package com.example.docengine.internal.validator;
+package io.github.nikolaynn.docengine.internal.validator;
 
-import com.example.docengine.api.DocumentFormat;
-import com.example.docengine.api.TemplateReference;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.TemplateReference;
 import org.junit.jupiter.api.Test;
 
 class NoopTemplateValidatorTest {
@@ -1450,10 +1450,10 @@ Expected: compile error.
 `doc-engine-core/src/main/java/com/example/docengine/internal/validator/NoopTemplateValidator.java`:
 
 ```java
-package com.example.docengine.internal.validator;
+package io.github.nikolaynn.docengine.internal.validator;
 
-import com.example.docengine.api.TemplateReference;
-import com.example.docengine.spi.TemplateValidator;
+import io.github.nikolaynn.docengine.api.TemplateReference;
+import io.github.nikolaynn.docengine.spi.TemplateValidator;
 
 public class NoopTemplateValidator implements TemplateValidator {
     @Override
@@ -1489,11 +1489,11 @@ git commit -m "feat(core): add NoopTemplateValidator (placeholder for v2 validat
 `doc-engine-core/src/test/java/com/example/docengine/internal/resolver/InputStreamTemplateResolverTest.java`:
 
 ```java
-package com.example.docengine.internal.resolver;
+package io.github.nikolaynn.docengine.internal.resolver;
 
-import com.example.docengine.api.DocumentFormat;
-import com.example.docengine.api.TemplateReference;
-import com.example.docengine.api.exception.TemplateResolutionException;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.TemplateReference;
+import io.github.nikolaynn.docengine.api.exception.TemplateResolutionException;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -1549,12 +1549,12 @@ Expected: compile error.
 `doc-engine-core/src/main/java/com/example/docengine/internal/resolver/InputStreamTemplateResolver.java`:
 
 ```java
-package com.example.docengine.internal.resolver;
+package io.github.nikolaynn.docengine.internal.resolver;
 
-import com.example.docengine.api.TemplateReference;
-import com.example.docengine.api.exception.TemplateResolutionException;
-import com.example.docengine.spi.ResolvedTemplate;
-import com.example.docengine.spi.TemplateResolver;
+import io.github.nikolaynn.docengine.api.TemplateReference;
+import io.github.nikolaynn.docengine.api.exception.TemplateResolutionException;
+import io.github.nikolaynn.docengine.spi.ResolvedTemplate;
+import io.github.nikolaynn.docengine.spi.TemplateResolver;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -1574,7 +1574,7 @@ public class InputStreamTemplateResolver implements TemplateResolver {
 
     private static byte[] readAll(InputStream in,
                                   String hint,
-                                  com.example.docengine.api.DocumentFormat sourceFormat) {
+                                  io.github.nikolaynn.docengine.api.DocumentFormat sourceFormat) {
         try (InputStream is = in) {
             return is.readAllBytes();
         } catch (IOException e) {
@@ -1614,7 +1614,7 @@ This task is bigger — covers the actual template engine. It includes a shared 
 `doc-engine-core/src/test/java/com/example/docengine/support/TemplateFixtures.java`:
 
 ```java
-package com.example.docengine.support;
+package io.github.nikolaynn.docengine.support;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Comment;
@@ -1705,15 +1705,15 @@ public final class TemplateFixtures {
 `doc-engine-core/src/test/java/com/example/docengine/internal/jxls/JxlsTemplateEngineTest.java`:
 
 ```java
-package com.example.docengine.internal.jxls;
+package io.github.nikolaynn.docengine.internal.jxls;
 
-import com.example.docengine.api.DocumentFormat;
-import com.example.docengine.api.exception.TemplateRenderingException;
-import com.example.docengine.internal.tempfile.DefaultTempFileManager;
-import com.example.docengine.spi.RenderContext;
-import com.example.docengine.spi.ResolvedTemplate;
-import com.example.docengine.spi.TempFileManager;
-import com.example.docengine.support.TemplateFixtures;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.exception.TemplateRenderingException;
+import io.github.nikolaynn.docengine.internal.tempfile.DefaultTempFileManager;
+import io.github.nikolaynn.docengine.spi.RenderContext;
+import io.github.nikolaynn.docengine.spi.ResolvedTemplate;
+import io.github.nikolaynn.docengine.spi.TempFileManager;
+import io.github.nikolaynn.docengine.support.TemplateFixtures;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -1831,13 +1831,13 @@ Expected: compile error.
 `doc-engine-core/src/main/java/com/example/docengine/internal/jxls/JxlsTemplateEngine.java`:
 
 ```java
-package com.example.docengine.internal.jxls;
+package io.github.nikolaynn.docengine.internal.jxls;
 
-import com.example.docengine.api.DocumentFormat;
-import com.example.docengine.api.exception.TemplateRenderingException;
-import com.example.docengine.spi.RenderContext;
-import com.example.docengine.spi.ResolvedTemplate;
-import com.example.docengine.spi.TemplateEngine;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.exception.TemplateRenderingException;
+import io.github.nikolaynn.docengine.spi.RenderContext;
+import io.github.nikolaynn.docengine.spi.ResolvedTemplate;
+import io.github.nikolaynn.docengine.spi.TemplateEngine;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -1945,13 +1945,13 @@ The converter is `ProcessBuilder`-based, so the unit tests verify error mapping 
 `doc-engine-core/src/test/java/com/example/docengine/internal/libreoffice/LibreOfficeConverterTest.java`:
 
 ```java
-package com.example.docengine.internal.libreoffice;
+package io.github.nikolaynn.docengine.internal.libreoffice;
 
-import com.example.docengine.api.DocumentFormat;
-import com.example.docengine.api.exception.DocumentConversionException;
-import com.example.docengine.internal.tempfile.DefaultTempFileManager;
-import com.example.docengine.spi.ConvertContext;
-import com.example.docengine.spi.TempFileManager;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.exception.DocumentConversionException;
+import io.github.nikolaynn.docengine.internal.tempfile.DefaultTempFileManager;
+import io.github.nikolaynn.docengine.spi.ConvertContext;
+import io.github.nikolaynn.docengine.spi.TempFileManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -2010,12 +2010,12 @@ Expected: compile error.
 `doc-engine-core/src/main/java/com/example/docengine/internal/libreoffice/LibreOfficeConverter.java`:
 
 ```java
-package com.example.docengine.internal.libreoffice;
+package io.github.nikolaynn.docengine.internal.libreoffice;
 
-import com.example.docengine.api.DocumentFormat;
-import com.example.docengine.api.exception.DocumentConversionException;
-import com.example.docengine.spi.ConvertContext;
-import com.example.docengine.spi.DocumentConverter;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.exception.DocumentConversionException;
+import io.github.nikolaynn.docengine.spi.ConvertContext;
+import io.github.nikolaynn.docengine.spi.DocumentConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -2177,12 +2177,12 @@ public class LibreOfficeConverter implements DocumentConverter {
 `doc-engine-core/src/test/java/com/example/docengine/internal/libreoffice/LibreOfficeConverterIT.java`:
 
 ```java
-package com.example.docengine.internal.libreoffice;
+package io.github.nikolaynn.docengine.internal.libreoffice;
 
-import com.example.docengine.api.DocumentFormat;
-import com.example.docengine.internal.tempfile.DefaultTempFileManager;
-import com.example.docengine.spi.ConvertContext;
-import com.example.docengine.spi.TempFileManager;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.internal.tempfile.DefaultTempFileManager;
+import io.github.nikolaynn.docengine.spi.ConvertContext;
+import io.github.nikolaynn.docengine.spi.TempFileManager;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -2209,7 +2209,7 @@ class LibreOfficeConverterIT {
     @Test
     void convertsXlsxToPdf(@TempDir Path tmp) throws Exception {
         Path xlsx = tmp.resolve("in.xlsx");
-        Files.write(xlsx, com.example.docengine.support.TemplateFixtures.simpleFields());
+        Files.write(xlsx, io.github.nikolaynn.docengine.support.TemplateFixtures.simpleFields());
         TempFileManager tfm = new DefaultTempFileManager(tmp, false);
         var c = new LibreOfficeConverter(null, Duration.ofSeconds(60), tmp);
 
@@ -2249,7 +2249,7 @@ git commit -m "feat(core): add LibreOfficeConverter (soffice headless) for XLSX�
 `doc-engine-core/src/main/java/com/example/docengine/api/DocumentEngine.java`:
 
 ```java
-package com.example.docengine.api;
+package io.github.nikolaynn.docengine.api;
 
 public interface DocumentEngine {
     GenerationResult generate(GenerationRequest request);
@@ -2261,25 +2261,25 @@ public interface DocumentEngine {
 `doc-engine-core/src/test/java/com/example/docengine/internal/DefaultDocumentEngineTest.java`:
 
 ```java
-package com.example.docengine.internal;
+package io.github.nikolaynn.docengine.internal;
 
-import com.example.docengine.api.DocumentFormat;
-import com.example.docengine.api.GenerationOptions;
-import com.example.docengine.api.GenerationRequest;
-import com.example.docengine.api.TemplateReference;
-import com.example.docengine.api.exception.InvalidGenerationRequestException;
-import com.example.docengine.api.exception.TemplateRenderingException;
-import com.example.docengine.api.exception.UnsupportedConversionException;
-import com.example.docengine.api.exception.UnsupportedTemplateFormatException;
-import com.example.docengine.internal.tempfile.DefaultTempFileManager;
-import com.example.docengine.spi.ConvertContext;
-import com.example.docengine.spi.DocumentConverter;
-import com.example.docengine.spi.RenderContext;
-import com.example.docengine.spi.ResolvedTemplate;
-import com.example.docengine.spi.TempFileManager;
-import com.example.docengine.spi.TemplateEngine;
-import com.example.docengine.spi.TemplateResolver;
-import com.example.docengine.spi.TemplateValidator;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.GenerationOptions;
+import io.github.nikolaynn.docengine.api.GenerationRequest;
+import io.github.nikolaynn.docengine.api.TemplateReference;
+import io.github.nikolaynn.docengine.api.exception.InvalidGenerationRequestException;
+import io.github.nikolaynn.docengine.api.exception.TemplateRenderingException;
+import io.github.nikolaynn.docengine.api.exception.UnsupportedConversionException;
+import io.github.nikolaynn.docengine.api.exception.UnsupportedTemplateFormatException;
+import io.github.nikolaynn.docengine.internal.tempfile.DefaultTempFileManager;
+import io.github.nikolaynn.docengine.spi.ConvertContext;
+import io.github.nikolaynn.docengine.spi.DocumentConverter;
+import io.github.nikolaynn.docengine.spi.RenderContext;
+import io.github.nikolaynn.docengine.spi.ResolvedTemplate;
+import io.github.nikolaynn.docengine.spi.TempFileManager;
+import io.github.nikolaynn.docengine.spi.TemplateEngine;
+import io.github.nikolaynn.docengine.spi.TemplateResolver;
+import io.github.nikolaynn.docengine.spi.TemplateValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -2472,24 +2472,24 @@ Expected: compile error.
 `doc-engine-core/src/main/java/com/example/docengine/internal/DefaultDocumentEngine.java`:
 
 ```java
-package com.example.docengine.internal;
+package io.github.nikolaynn.docengine.internal;
 
-import com.example.docengine.api.DocumentEngine;
-import com.example.docengine.api.DocumentFormat;
-import com.example.docengine.api.GenerationOptions;
-import com.example.docengine.api.GenerationRequest;
-import com.example.docengine.api.GenerationResult;
-import com.example.docengine.api.exception.InvalidGenerationRequestException;
-import com.example.docengine.api.exception.UnsupportedConversionException;
-import com.example.docengine.api.exception.UnsupportedTemplateFormatException;
-import com.example.docengine.spi.ConvertContext;
-import com.example.docengine.spi.DocumentConverter;
-import com.example.docengine.spi.RenderContext;
-import com.example.docengine.spi.ResolvedTemplate;
-import com.example.docengine.spi.TempFileManager;
-import com.example.docengine.spi.TemplateEngine;
-import com.example.docengine.spi.TemplateResolver;
-import com.example.docengine.spi.TemplateValidator;
+import io.github.nikolaynn.docengine.api.DocumentEngine;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.GenerationOptions;
+import io.github.nikolaynn.docengine.api.GenerationRequest;
+import io.github.nikolaynn.docengine.api.GenerationResult;
+import io.github.nikolaynn.docengine.api.exception.InvalidGenerationRequestException;
+import io.github.nikolaynn.docengine.api.exception.UnsupportedConversionException;
+import io.github.nikolaynn.docengine.api.exception.UnsupportedTemplateFormatException;
+import io.github.nikolaynn.docengine.spi.ConvertContext;
+import io.github.nikolaynn.docengine.spi.DocumentConverter;
+import io.github.nikolaynn.docengine.spi.RenderContext;
+import io.github.nikolaynn.docengine.spi.ResolvedTemplate;
+import io.github.nikolaynn.docengine.spi.TempFileManager;
+import io.github.nikolaynn.docengine.spi.TemplateEngine;
+import io.github.nikolaynn.docengine.spi.TemplateResolver;
+import io.github.nikolaynn.docengine.spi.TemplateValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -2574,7 +2574,7 @@ public class DefaultDocumentEngine implements DocumentEngine {
         try {
             return Files.readAllBytes(file);
         } catch (IOException e) {
-            throw new com.example.docengine.api.exception.TempFileException(
+            throw new io.github.nikolaynn.docengine.api.exception.TempFileException(
                 hint, null, null, "failed to read produced document", e);
         }
     }
@@ -2627,13 +2627,13 @@ git commit -m "feat(core): add DefaultDocumentEngine orchestrator"
 `doc-engine-core/src/test/java/com/example/docengine/api/DocumentEngineBuilderTest.java`:
 
 ```java
-package com.example.docengine.api;
+package io.github.nikolaynn.docengine.api;
 
-import com.example.docengine.spi.DocumentConverter;
-import com.example.docengine.spi.TempFileManager;
-import com.example.docengine.spi.TemplateEngine;
-import com.example.docengine.spi.TemplateResolver;
-import com.example.docengine.spi.TemplateValidator;
+import io.github.nikolaynn.docengine.spi.DocumentConverter;
+import io.github.nikolaynn.docengine.spi.TempFileManager;
+import io.github.nikolaynn.docengine.spi.TemplateEngine;
+import io.github.nikolaynn.docengine.spi.TemplateResolver;
+import io.github.nikolaynn.docengine.spi.TemplateValidator;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -2680,16 +2680,16 @@ Expected: compile error.
 `doc-engine-core/src/main/java/com/example/docengine/api/DocumentEngineBuilder.java`:
 
 ```java
-package com.example.docengine.api;
+package io.github.nikolaynn.docengine.api;
 
-import com.example.docengine.internal.DefaultDocumentEngine;
-import com.example.docengine.internal.resolver.InputStreamTemplateResolver;
-import com.example.docengine.internal.validator.NoopTemplateValidator;
-import com.example.docengine.spi.DocumentConverter;
-import com.example.docengine.spi.TempFileManager;
-import com.example.docengine.spi.TemplateEngine;
-import com.example.docengine.spi.TemplateResolver;
-import com.example.docengine.spi.TemplateValidator;
+import io.github.nikolaynn.docengine.internal.DefaultDocumentEngine;
+import io.github.nikolaynn.docengine.internal.resolver.InputStreamTemplateResolver;
+import io.github.nikolaynn.docengine.internal.validator.NoopTemplateValidator;
+import io.github.nikolaynn.docengine.spi.DocumentConverter;
+import io.github.nikolaynn.docengine.spi.TempFileManager;
+import io.github.nikolaynn.docengine.spi.TemplateEngine;
+import io.github.nikolaynn.docengine.spi.TemplateResolver;
+import io.github.nikolaynn.docengine.spi.TemplateValidator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -2764,18 +2764,18 @@ This exercises the full happy path through `DocumentEngineBuilder` with the real
 `doc-engine-core/src/test/java/com/example/docengine/EndToEndTest.java`:
 
 ```java
-package com.example.docengine;
+package io.github.nikolaynn.docengine;
 
-import com.example.docengine.api.DocumentEngine;
-import com.example.docengine.api.DocumentEngineBuilder;
-import com.example.docengine.api.DocumentFormat;
-import com.example.docengine.api.GenerationOptions;
-import com.example.docengine.api.GenerationRequest;
-import com.example.docengine.api.TemplateReference;
-import com.example.docengine.internal.jxls.JxlsTemplateEngine;
-import com.example.docengine.internal.libreoffice.LibreOfficeConverter;
-import com.example.docengine.internal.tempfile.DefaultTempFileManager;
-import com.example.docengine.support.TemplateFixtures;
+import io.github.nikolaynn.docengine.api.DocumentEngine;
+import io.github.nikolaynn.docengine.api.DocumentEngineBuilder;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.GenerationOptions;
+import io.github.nikolaynn.docengine.api.GenerationRequest;
+import io.github.nikolaynn.docengine.api.TemplateReference;
+import io.github.nikolaynn.docengine.internal.jxls.JxlsTemplateEngine;
+import io.github.nikolaynn.docengine.internal.libreoffice.LibreOfficeConverter;
+import io.github.nikolaynn.docengine.internal.tempfile.DefaultTempFileManager;
+import io.github.nikolaynn.docengine.support.TemplateFixtures;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.io.TempDir;
@@ -2806,7 +2806,7 @@ class EndToEndTest {
         assertThat(result.content()).isNotEmpty();
     }
 
-    @EnabledIf("com.example.docengine.internal.libreoffice.LibreOfficeConverterIT#sofficeAvailable")
+    @EnabledIf("io.github.nikolaynn.docengine.internal.libreoffice.LibreOfficeConverterIT#sofficeAvailable")
     @Test
     void pdfRoundTripWithBuilder(@TempDir Path tmp) throws IOException {
         DocumentEngine engine = DocumentEngineBuilder.create()
@@ -2855,15 +2855,15 @@ git commit -m "test(core): add end-to-end plain-Java happy path test"
 `doc-engine-spring-boot-starter/src/test/java/com/example/docengine/starter/DocEngineAutoConfigurationTest.java`:
 
 ```java
-package com.example.docengine.starter;
+package io.github.nikolaynn.docengine.starter;
 
-import com.example.docengine.api.DocumentEngine;
-import com.example.docengine.internal.libreoffice.LibreOfficeConverter;
-import com.example.docengine.spi.DocumentConverter;
-import com.example.docengine.spi.TempFileManager;
-import com.example.docengine.spi.TemplateEngine;
-import com.example.docengine.spi.TemplateResolver;
-import com.example.docengine.spi.TemplateValidator;
+import io.github.nikolaynn.docengine.api.DocumentEngine;
+import io.github.nikolaynn.docengine.internal.libreoffice.LibreOfficeConverter;
+import io.github.nikolaynn.docengine.spi.DocumentConverter;
+import io.github.nikolaynn.docengine.spi.TempFileManager;
+import io.github.nikolaynn.docengine.spi.TemplateEngine;
+import io.github.nikolaynn.docengine.spi.TemplateResolver;
+import io.github.nikolaynn.docengine.spi.TemplateValidator;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -2958,7 +2958,7 @@ Expected: compile error.
 `doc-engine-spring-boot-starter/src/main/java/com/example/docengine/starter/DocEngineProperties.java`:
 
 ```java
-package com.example.docengine.starter;
+package io.github.nikolaynn.docengine.starter;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -2988,20 +2988,20 @@ public record DocEngineProperties(
 `doc-engine-spring-boot-starter/src/main/java/com/example/docengine/starter/DocEngineAutoConfiguration.java`:
 
 ```java
-package com.example.docengine.starter;
+package io.github.nikolaynn.docengine.starter;
 
-import com.example.docengine.api.DocumentEngine;
-import com.example.docengine.internal.DefaultDocumentEngine;
-import com.example.docengine.internal.jxls.JxlsTemplateEngine;
-import com.example.docengine.internal.libreoffice.LibreOfficeConverter;
-import com.example.docengine.internal.resolver.InputStreamTemplateResolver;
-import com.example.docengine.internal.tempfile.DefaultTempFileManager;
-import com.example.docengine.internal.validator.NoopTemplateValidator;
-import com.example.docengine.spi.DocumentConverter;
-import com.example.docengine.spi.TempFileManager;
-import com.example.docengine.spi.TemplateEngine;
-import com.example.docengine.spi.TemplateResolver;
-import com.example.docengine.spi.TemplateValidator;
+import io.github.nikolaynn.docengine.api.DocumentEngine;
+import io.github.nikolaynn.docengine.internal.DefaultDocumentEngine;
+import io.github.nikolaynn.docengine.internal.jxls.JxlsTemplateEngine;
+import io.github.nikolaynn.docengine.internal.libreoffice.LibreOfficeConverter;
+import io.github.nikolaynn.docengine.internal.resolver.InputStreamTemplateResolver;
+import io.github.nikolaynn.docengine.internal.tempfile.DefaultTempFileManager;
+import io.github.nikolaynn.docengine.internal.validator.NoopTemplateValidator;
+import io.github.nikolaynn.docengine.spi.DocumentConverter;
+import io.github.nikolaynn.docengine.spi.TempFileManager;
+import io.github.nikolaynn.docengine.spi.TemplateEngine;
+import io.github.nikolaynn.docengine.spi.TemplateResolver;
+import io.github.nikolaynn.docengine.spi.TemplateValidator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -3065,7 +3065,7 @@ public class DocEngineAutoConfiguration {
 
 ```properties
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.example.docengine.starter.DocEngineAutoConfiguration
+io.github.nikolaynn.docengine.starter.DocEngineAutoConfiguration
 ```
 
 - [ ] **Step 6: Run starter tests**
