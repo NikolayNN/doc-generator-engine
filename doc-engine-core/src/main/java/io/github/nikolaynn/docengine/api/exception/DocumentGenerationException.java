@@ -2,6 +2,12 @@ package io.github.nikolaynn.docengine.api.exception;
 
 import io.github.nikolaynn.docengine.api.DocumentFormat;
 
+/**
+ * Root of the library's unchecked exception hierarchy. Internal JXLS/POI/I-O
+ * failures never leak: they are wrapped into a subtype of this class. Each
+ * exception carries a template hint and the source/target formats; template
+ * content and data values are never included (PII-safe).
+ */
 public abstract class DocumentGenerationException extends RuntimeException {
 
     private final String templateHint;

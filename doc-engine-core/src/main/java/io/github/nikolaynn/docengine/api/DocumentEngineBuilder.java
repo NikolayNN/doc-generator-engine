@@ -18,6 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Fluent builder for a plain-Java {@link DocumentEngine}. Start with
+ * {@link #create()}, add components (or {@link #withDefaults()}), then
+ * {@link #build()}. At least one template engine and a temp-file manager are
+ * required; a resolver and validator default to no-op implementations.
+ */
 public final class DocumentEngineBuilder {
 
     private TempFileManager tempFileManager;
