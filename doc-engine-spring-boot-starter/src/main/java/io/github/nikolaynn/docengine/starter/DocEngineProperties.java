@@ -5,6 +5,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.nio.file.Path;
 import java.time.Duration;
 
+/**
+ * Configuration for the doc-engine Spring Boot starter, bound from {@code doc-engine.*}.
+ *
+ * @param tempDir directory for temporary files; {@code null} uses the system temp dir
+ * @param cleanupOnShutdown delete tracked temp files on JVM shutdown
+ * @param converter converter configuration
+ */
 @ConfigurationProperties("doc-engine")
 public record DocEngineProperties(
         Path tempDir,
@@ -17,6 +24,12 @@ public record DocEngineProperties(
         }
     }
 
+    /**
+     * Converter configuration.
+     *
+     * @param libreoffice process-based LibreOffice converter settings
+     * @param jod pooled JODConverter settings (used when the doc-engine-jodconverter module is present)
+     */
     public record Converter(LibreOffice libreoffice, Jod jod) {
         public Converter {
             if (libreoffice == null) {
@@ -28,12 +41,30 @@ public record DocEngineProperties(
         }
     }
 
+    /**
+     * Process-based LibreOffice converter.
+     *
+     * @param enabled whether the converter is created (disable if PDF is never needed)
+     * @param executable path to the soffice executable; {@code null} looks it up on PATH
+     * @param timeout per-conversion timeout
+     * @param workingDir working directory for the soffice process; {@code null} uses the system temp dir
+     */
     public record LibreOffice(boolean enabled, Path executable, Duration timeout, Path workingDir) {
         public LibreOffice {
             if (timeout == null) timeout = Duration.ofSeconds(60);
         }
     }
 
+    /**
+     * Pooled JODConverter (long-lived LibreOffice processes).
+     *
+     * @param enabled whether the pooled converter is created when the module is on the classpath
+     * @param officeHome LibreOffice installation directory; {@code null} auto-detects
+     * @param poolSize number of LibreOffice processes in the pool
+     * @param taskTimeout per-task execution timeout
+     * @param taskQueueTimeout how long a task waits for a free process
+     * @param maxTasksPerProcess restart a process after this many tasks
+     */
     public record Jod(boolean enabled,
                       Path officeHome,
                       int poolSize,

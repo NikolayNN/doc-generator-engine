@@ -1,0 +1,12 @@
+{
+  "properties": [
+    { "name": "doc-engine.cleanup-on-shutdown", "type": "java.lang.Boolean", "defaultValue": true },
+    { "name": "doc-engine.converter.libreoffice.enabled", "type": "java.lang.Boolean", "defaultValue": true },
+    { "name": "doc-engine.converter.libreoffice.timeout", "type": "java.time.Duration", "defaultValue": "60s" },
+    { "name": "doc-engine.converter.jod.enabled", "type": "java.lang.Boolean", "defaultValue": true },
+    { "name": "doc-engine.converter.jod.pool-size", "type": "java.lang.Integer", "defaultValue": 1 },
+    { "name": "doc-engine.converter.jod.task-timeout", "type": "java.time.Duration", "defaultValue": "120s" },
+    { "name": "doc-engine.converter.jod.task-queue-timeout", "type": "java.time.Duration", "defaultValue": "30s" },
+    { "name": "doc-engine.converter.jod.max-tasks-per-process", "type": "java.lang.Integer", "defaultValue": 200 }
+  ]
+}
