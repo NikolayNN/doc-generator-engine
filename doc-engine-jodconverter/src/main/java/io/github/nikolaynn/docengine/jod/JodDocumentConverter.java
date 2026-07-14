@@ -99,11 +99,20 @@ public final class JodDocumentConverter implements DocumentConverter {
      * conversion). Idempotent while the converter is open.
      */
     public synchronized void start() {
+        startAndGetManager();
+    }
+
+    /**
+     * Starts the pool if needed (see {@link #start()}) and returns the started
+     * manager, all under the instance lock, so callers get a consistent
+     * reference without racing a concurrent {@link #close()}.
+     */
+    private synchronized OfficeManager startAndGetManager() {
         if (closed) {
             throw new IllegalStateException("converter is closed");
         }
         if (started) {
-            return;
+            return officeManager;
         }
         if (officeManager == null) {
             // построение отложено сюда: LocalOfficeManager.builder() валидирует
@@ -117,6 +126,7 @@ public final class JodDocumentConverter implements DocumentConverter {
             throw new DocumentConversionException(null, DocumentFormat.XLSX, DocumentFormat.PDF,
                 "failed to start LibreOffice pool: " + e.getMessage(), e, false);
         }
+        return officeManager;
     }
 
     @Override
@@ -130,14 +140,20 @@ public final class JodDocumentConverter implements DocumentConverter {
             throw new DocumentConversionException(ctx.templateHint(), from, to,
                 "unsupported conversion " + from + "->" + to, null, false);
         }
-        start();
+        // Manager reference captured under the lock in startAndGetManager(); the
+        // conversion itself runs outside any lock so the pool can service
+        // concurrent conversions in parallel. A close() racing an in-flight
+        // conversion is not synchronized against here by design: it surfaces
+        // as a conversion failure rather than blocking close() or convert().
+        OfficeManager manager = startAndGetManager();
 
         Path managed = ctx.tempFileManager().createTempFile("doc-engine-pdf-", "." + to.extension());
+        boolean success = false;
         try {
             // LocalConverter.convert(File) не требует, чтобы officeManager реализовывал
             // TemporaryFileMaker (это нужно только для convert(InputStream)); мок
             // плоского OfficeManager (start/stop/isRunning/execute) этой цепочке достаточен.
-            LocalConverter.builder().officeManager(officeManager).build()
+            LocalConverter.builder().officeManager(manager).build()
                 .convert(input.toFile())
                 .to(managed.toFile())
                 .execute();
@@ -146,21 +162,21 @@ public final class JodDocumentConverter implements DocumentConverter {
                     "LibreOffice produced no output", null, false);
             }
             log.debug("converted {} -> {}", input, managed);
+            success = true;
             return managed;
         } catch (OfficeException e) {
-            ctx.tempFileManager().delete(managed);
             if (hasTimeoutCause(e)) {
                 throw DocumentConversionException.timeout(ctx.templateHint(), from, to, taskTimeout);
             }
             throw new DocumentConversionException(ctx.templateHint(), from, to,
                 "LibreOffice conversion failed: " + e.getMessage(), e, false);
         } catch (IOException e) {
-            ctx.tempFileManager().delete(managed);
             throw new DocumentConversionException(ctx.templateHint(), from, to,
                 "failed to read conversion output", e, false);
-        } catch (DocumentConversionException e) {
-            ctx.tempFileManager().delete(managed);
-            throw e;
+        } finally {
+            if (!success) {
+                ctx.tempFileManager().delete(managed);
+            }
         }
     }
 

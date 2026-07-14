@@ -25,7 +25,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 class JodDocumentConverterTest {
 
@@ -119,6 +118,24 @@ class JodDocumentConverterTest {
         assertThatThrownBy(() -> c.convert(input, DocumentFormat.XLSX, DocumentFormat.PDF, ctx(tfm)))
             .isInstanceOf(DocumentConversionException.class)
             .matches(e -> ((DocumentConversionException) e).isTimeout());
+    }
+
+    @Test
+    void cleansUpManagedTempFileOnUncheckedException(@TempDir Path tmp) throws Exception {
+        OfficeManager manager = runningManager();
+        doThrow(new RuntimeException("kaboom")).when(manager).execute(any());
+        var c = new JodDocumentConverter(manager, Duration.ofSeconds(5));
+        TempFileManager tfm = new DefaultTempFileManager(tmp, false);
+        Path input = Files.writeString(tmp.resolve("in.xlsx"), "stub");
+
+        assertThatThrownBy(() -> c.convert(input, DocumentFormat.XLSX, DocumentFormat.PDF, ctx(tfm)))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("kaboom");
+
+        try (var files = Files.list(tmp)) {
+            assertThat(files.filter(p -> p.getFileName().toString().startsWith("doc-engine-pdf-")))
+                .isEmpty();
+        }
     }
 
     @Test
