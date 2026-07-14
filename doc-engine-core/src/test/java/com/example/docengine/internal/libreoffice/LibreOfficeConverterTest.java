@@ -82,28 +82,38 @@ class LibreOfficeConverterTest {
 
     @Test
     void killsWholeProcessTreeOnTimeout(@TempDir Path tmp) throws Exception {
-        Path pidFile = tmp.resolve("child.pid");
-        Path exe = createFakeSoffice(tmp, Map.of(
-            "fake.childPidFile", pidFile.toString(),
-            "fake.sleepMs", "60000"));
-        var c = new LibreOfficeConverter(exe, Duration.ofSeconds(4), tmp);
-        TempFileManager tfm = new DefaultTempFileManager(tmp, false);
-
-        assertThatThrownBy(() -> c.convert(stubInput(tmp, "hang"), DocumentFormat.XLSX, DocumentFormat.PDF,
-                new ConvertContext(Duration.ofSeconds(4), tfm, "tpl")))
-            .isInstanceOf(DocumentConversionException.class)
-            .hasMessageContaining("timeout");
-
-        long childPid = Long.parseLong(waitForContent(pidFile, Duration.ofSeconds(10)).trim());
+        // Forcibly-killed processes release their file/CWD handles asynchronously on
+        // Windows, so everything they touch lives in a self-managed dir outside
+        // @TempDir (whose instant cleanup would race those handles), and the converter
+        // gets no workingDir so the children don't inherit a locked CWD.
+        Path side = Files.createTempDirectory("doc-engine-kill-test-");
+        long childPid = -1;
         try {
+            Path pidFile = side.resolve("child.pid");
+            Path exe = createFakeSoffice(side, Map.of(
+                "fake.childPidFile", pidFile.toString(),
+                "fake.sleepMs", "60000"));
+            var c = new LibreOfficeConverter(exe, Duration.ofSeconds(4), null);
+            TempFileManager tfm = new DefaultTempFileManager(tmp, false);
+
+            assertThatThrownBy(() -> c.convert(stubInput(tmp, "hang"), DocumentFormat.XLSX, DocumentFormat.PDF,
+                    new ConvertContext(Duration.ofSeconds(4), tfm, "tpl")))
+                .isInstanceOf(DocumentConversionException.class)
+                .hasMessageContaining("timeout");
+
+            final long pid = Long.parseLong(waitForContent(pidFile, Duration.ofSeconds(10)).trim());
+            childPid = pid;
             boolean childDead = waitUntil(
-                () -> ProcessHandle.of(childPid).map(h -> !h.isAlive()).orElse(true),
+                () -> ProcessHandle.of(pid).map(h -> !h.isAlive()).orElse(true),
                 Duration.ofSeconds(5));
             assertThat(childDead)
-                .as("descendant process (pid %d) must be killed together with soffice", childPid)
+                .as("descendant process (pid %d) must be killed together with soffice", pid)
                 .isTrue();
         } finally {
-            ProcessHandle.of(childPid).ifPresent(ProcessHandle::destroyForcibly);
+            if (childPid > 0) {
+                ProcessHandle.of(childPid).ifPresent(ProcessHandle::destroyForcibly);
+            }
+            bestEffortDeleteRecursively(side);
         }
     }
 
@@ -189,5 +199,19 @@ class LibreOfficeConverterTest {
             Thread.sleep(100);
         }
         return condition.getAsBoolean();
+    }
+
+    private static void bestEffortDeleteRecursively(Path dir) {
+        try (var walk = Files.walk(dir)) {
+            walk.sorted(java.util.Comparator.reverseOrder()).forEach(p -> {
+                try {
+                    Files.deleteIfExists(p);
+                } catch (IOException ignored) {
+                    // killed processes may briefly hold handles; a leftover in the OS
+                    // temp dir is acceptable
+                }
+            });
+        } catch (IOException ignored) {
+        }
     }
 }
