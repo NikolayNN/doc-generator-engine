@@ -37,6 +37,7 @@
     </scm>
 
     <modules>
+        <module>doc-engine-api</module>
         <module>doc-engine-core</module>
         <module>doc-engine-jodconverter</module>
         <module>doc-engine-spring-boot-starter</module>
@@ -120,6 +121,16 @@
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
                 <version>${assertj.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.nikolaynn</groupId>
+                <artifactId>doc-engine-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.nikolaynn</groupId>
+                <artifactId>doc-engine-core</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.nikolaynn</groupId>
