@@ -222,6 +222,40 @@ class DefaultDocumentEngineTest {
     }
 
     @Test
+    void closeContinuesWhenAConverterThrows() {
+        AtomicBoolean secondClosed = new AtomicBoolean();
+        AtomicBoolean tfmClosed = new AtomicBoolean();
+        DocumentConverter throwing = new DocumentConverter() {
+            @Override public boolean supports(DocumentFormat from, DocumentFormat to) { return false; }
+            @Override public Path convert(Path input, DocumentFormat from, DocumentFormat to, ConvertContext ctx) {
+                throw new UnsupportedOperationException();
+            }
+            @Override public void close() { throw new RuntimeException("close boom"); }
+        };
+        DocumentConverter second = new DocumentConverter() {
+            @Override public boolean supports(DocumentFormat from, DocumentFormat to) { return false; }
+            @Override public Path convert(Path input, DocumentFormat from, DocumentFormat to, ConvertContext ctx) {
+                throw new UnsupportedOperationException();
+            }
+            @Override public void close() { secondClosed.set(true); }
+        };
+        TempFileManager manager = new TempFileManager() {
+            @Override public Path createTempFile(String prefix, String suffix) {
+                throw new UnsupportedOperationException();
+            }
+            @Override public void delete(Path path) {}
+            @Override public void close() { tfmClosed.set(true); }
+        };
+        var engine = new DefaultDocumentEngine(
+            List.of(mock(TemplateEngine.class)), List.of(throwing, second), resolver, validator, manager);
+
+        engine.close(); // a throwing converter must not abort the cascade
+
+        assertThat(secondClosed).isTrue();
+        assertThat(tfmClosed).isTrue();
+    }
+
+    @Test
     void moveOrCopyMovesSourceToTargetWhenMovePossible(@TempDir Path tmp) throws Exception {
         Path source = Files.writeString(tmp.resolve("src.pdf"), "payload");
         Path target = tmp.resolve("out.pdf");
