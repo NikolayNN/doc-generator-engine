@@ -53,7 +53,7 @@ class JodDocumentConverterIT {
     @Test
     void handlesFourConcurrentConversions(@TempDir Path tmp) throws Exception {
         try (JodDocumentConverter converter = new JodDocumentConverter(
-                JodDocumentConverter.Config.builder().workingDir(tmp).build())) {
+                JodDocumentConverter.Config.builder().poolSize(4).workingDir(tmp).build())) {
             TempFileManager tfm = new DefaultTempFileManager(tmp, false);
             List<Callable<Path>> jobs = new ArrayList<>();
             for (int i = 0; i < 4; i++) {
