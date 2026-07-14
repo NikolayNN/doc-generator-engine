@@ -19,3 +19,23 @@ jobs:
           cache: maven
       - name: Build and test
         run: mvn -B verify
+
+  libreoffice-it:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Install LibreOffice
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libreoffice-calc
+      # fail loudly if soffice is missing, otherwise the gated tests skip silently
+      - name: Assert soffice is available
+        run: soffice --version
+      - name: Build and run tests including LibreOffice conversion
+        run: mvn -B verify
