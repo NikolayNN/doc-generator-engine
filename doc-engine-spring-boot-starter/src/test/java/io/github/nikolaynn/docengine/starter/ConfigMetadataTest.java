@@ -28,5 +28,8 @@ class ConfigMetadataTest {
         // "120s" is the jod.task-timeout default and cannot be inferred by the
         // processor, so it is present ONLY after the additional file is added
         assertThat(json).contains("120s");
+        // descriptions are supplied via the additional metadata file, because the
+        // Spring Boot 2.7 processor does not extract record @param Javadoc
+        assertThat(json).contains("Number of LibreOffice processes in the pool");
     }
 }

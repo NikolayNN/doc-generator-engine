@@ -1,12 +1,16 @@
 {
   "properties": [
-    { "name": "doc-engine.cleanup-on-shutdown", "type": "java.lang.Boolean", "defaultValue": true },
-    { "name": "doc-engine.converter.libreoffice.enabled", "type": "java.lang.Boolean", "defaultValue": true },
-    { "name": "doc-engine.converter.libreoffice.timeout", "type": "java.time.Duration", "defaultValue": "60s" },
-    { "name": "doc-engine.converter.jod.enabled", "type": "java.lang.Boolean", "defaultValue": true },
-    { "name": "doc-engine.converter.jod.pool-size", "type": "java.lang.Integer", "defaultValue": 1 },
-    { "name": "doc-engine.converter.jod.task-timeout", "type": "java.time.Duration", "defaultValue": "120s" },
-    { "name": "doc-engine.converter.jod.task-queue-timeout", "type": "java.time.Duration", "defaultValue": "30s" },
-    { "name": "doc-engine.converter.jod.max-tasks-per-process", "type": "java.lang.Integer", "defaultValue": 200 }
+    { "name": "doc-engine.temp-dir", "type": "java.nio.file.Path", "description": "Directory for temporary files; unset uses the system temp dir." },
+    { "name": "doc-engine.cleanup-on-shutdown", "type": "java.lang.Boolean", "description": "Delete tracked temp files on JVM shutdown.", "defaultValue": true },
+    { "name": "doc-engine.converter.libreoffice.enabled", "type": "java.lang.Boolean", "description": "Whether the process-based LibreOffice converter is created.", "defaultValue": true },
+    { "name": "doc-engine.converter.libreoffice.executable", "type": "java.nio.file.Path", "description": "Path to the soffice executable; unset looks it up on PATH." },
+    { "name": "doc-engine.converter.libreoffice.timeout", "type": "java.time.Duration", "description": "Per-conversion timeout for the process-based LibreOffice converter.", "defaultValue": "60s" },
+    { "name": "doc-engine.converter.libreoffice.working-dir", "type": "java.nio.file.Path", "description": "Working directory for the soffice process; unset uses the system temp dir." },
+    { "name": "doc-engine.converter.jod.enabled", "type": "java.lang.Boolean", "description": "Whether the pooled JODConverter is created when the module is on the classpath.", "defaultValue": true },
+    { "name": "doc-engine.converter.jod.office-home", "type": "java.nio.file.Path", "description": "LibreOffice installation directory; unset auto-detects." },
+    { "name": "doc-engine.converter.jod.pool-size", "type": "java.lang.Integer", "description": "Number of LibreOffice processes in the pool.", "defaultValue": 1 },
+    { "name": "doc-engine.converter.jod.task-timeout", "type": "java.time.Duration", "description": "Per-task execution timeout for the pool.", "defaultValue": "120s" },
+    { "name": "doc-engine.converter.jod.task-queue-timeout", "type": "java.time.Duration", "description": "How long a task waits for a free process.", "defaultValue": "30s" },
+    { "name": "doc-engine.converter.jod.max-tasks-per-process", "type": "java.lang.Integer", "description": "Restart a process after this many tasks.", "defaultValue": 200 }
   ]
 }
