@@ -221,6 +221,33 @@ class DefaultDocumentEngineTest {
         assertThat(tfmClosed).isTrue();
     }
 
+    @Test
+    void moveOrCopyMovesSourceToTargetWhenMovePossible(@TempDir Path tmp) throws Exception {
+        Path source = Files.writeString(tmp.resolve("src.pdf"), "payload");
+        Path target = tmp.resolve("out.pdf");
+
+        DefaultDocumentEngine.moveOrCopy(source, target);
+
+        assertThat(Files.readString(target)).isEqualTo("payload");
+        assertThat(source).doesNotExist();
+    }
+
+    @Test
+    void moveOrCopyFallsBackToCopyWhenMoveFailsAcrossVolumes(@TempDir Path tmp) throws Exception {
+        Path source = Files.writeString(tmp.resolve("src.pdf"), "payload");
+        Path target = tmp.resolve("out.pdf");
+
+        // simulate temp dir and target on different filesystems: the move primitive
+        // throws, and the file must still be delivered via copy + source cleanup
+        DefaultDocumentEngine.moveOrCopy(source, target, (s, t) -> {
+            throw new java.nio.file.FileSystemException(s.toString(), t.toString(),
+                "Invalid cross-device link");
+        });
+
+        assertThat(Files.readString(target)).isEqualTo("payload");
+        assertThat(source).doesNotExist();
+    }
+
     private static GenerationRequest req(DocumentFormat target, String hint) {
         return new GenerationRequest(
             new TemplateReference.BytesRef(new byte[]{1}, DocumentFormat.XLSX, hint),

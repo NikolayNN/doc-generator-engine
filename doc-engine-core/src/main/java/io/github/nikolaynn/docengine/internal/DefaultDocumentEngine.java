@@ -90,9 +90,35 @@ public class DefaultDocumentEngine implements DocumentEngine {
     public GenerationMetadata generateToFile(GenerationRequest request, Path target) {
         Objects.requireNonNull(target, "target");
         return generateInternal(request, (output, meta) -> {
-            Files.move(output, target, StandardCopyOption.REPLACE_EXISTING);
+            moveOrCopy(output, target);
             return meta;
         });
+    }
+
+    /** A move primitive; the seam that lets tests simulate a cross-volume failure. */
+    @FunctionalInterface
+    interface FileMove {
+        void move(Path source, Path target) throws IOException;
+    }
+
+    private static final FileMove DEFAULT_MOVE =
+        (s, t) -> Files.move(s, t, StandardCopyOption.REPLACE_EXISTING);
+
+    static void moveOrCopy(Path source, Path target) throws IOException {
+        moveOrCopy(source, target, DEFAULT_MOVE);
+    }
+
+    static void moveOrCopy(Path source, Path target, FileMove move) throws IOException {
+        try {
+            move.move(source, target);
+        } catch (IOException e) {
+            // Source (a temp file) and target live on different filesystems, so a
+            // rename/atomic move is impossible ("Invalid cross-device link"). Fall
+            // back to copy + delete of the source to preserve move semantics.
+            log.debug("move {} -> {} failed ({}); falling back to copy", source, target, e.toString());
+            Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+            Files.deleteIfExists(source);
+        }
     }
 
     /** Delivers the produced document file to its final destination. */
