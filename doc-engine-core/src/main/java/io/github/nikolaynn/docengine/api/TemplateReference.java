@@ -3,8 +3,13 @@ package io.github.nikolaynn.docengine.api;
 import java.io.InputStream;
 import java.util.Objects;
 
-public sealed interface TemplateReference
-        permits TemplateReference.InputStreamRef, TemplateReference.BytesRef {
+/**
+ * Reference to a template. Deliberately open for extension: a custom
+ * implementation (e.g. a key into S3/classpath/DB storage) is resolved to
+ * bytes by the {@link io.github.nikolaynn.docengine.spi.TemplateResolver}
+ * configured on the engine.
+ */
+public interface TemplateReference {
 
     DocumentFormat sourceFormat();
 

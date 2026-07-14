@@ -1,8 +1,12 @@
 package io.github.nikolaynn.docengine.api;
 
+import io.github.nikolaynn.docengine.spi.ResolvedTemplate;
+import io.github.nikolaynn.docengine.spi.TemplateResolver;
+import io.github.nikolaynn.docengine.support.TemplateFixtures;
 import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -42,5 +46,33 @@ class TemplateReferenceTest {
     void rejectsNullSourceFormat() {
         assertThatThrownBy(() -> new TemplateReference.BytesRef(new byte[0], null, "x"))
             .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void customReferenceTypeResolvesThroughCustomResolver() throws Exception {
+        // a third-party reference type, e.g. a key into S3/classpath/DB storage
+        record KeyRef(String key, DocumentFormat sourceFormat, String hint) implements TemplateReference {}
+
+        byte[] templateBytes = TemplateFixtures.simpleFields();
+        TemplateResolver byKey = ref -> {
+            if (ref instanceof KeyRef k && "invoice".equals(k.key())) {
+                return new ResolvedTemplate(templateBytes, k.sourceFormat(), k.hint());
+            }
+            throw new IllegalArgumentException("unknown reference: " + ref);
+        };
+
+        DocumentEngine engine = DocumentEngineBuilder.create()
+            .withJxlsEngine()
+            .withDefaultTempFileManager(null, false)
+            .templateResolver(byKey)
+            .build();
+
+        GenerationResult result = engine.generate(new GenerationRequest(
+            new KeyRef("invoice", DocumentFormat.XLSX, "invoice.xlsx"),
+            Map.of("greeting", "Hello", "name", "Resolver"),
+            DocumentFormat.XLSX,
+            null));
+
+        assertThat(result.content()).isNotEmpty();
     }
 }
