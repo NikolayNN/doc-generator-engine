@@ -46,6 +46,15 @@ public class DefaultDocumentEngine implements DocumentEngine {
         this.resolver = Objects.requireNonNull(resolver, "resolver");
         this.validator = Objects.requireNonNull(validator, "validator");
         this.tempFiles = Objects.requireNonNull(tempFiles, "tempFiles");
+        if (this.templateEngines.isEmpty()) {
+            // fail at construction (e.g. Spring context refresh), not on the first generate()
+            throw new IllegalStateException("at least one templateEngine is required");
+        }
+    }
+
+    @Override
+    public void close() {
+        tempFiles.close();
     }
 
     @Override

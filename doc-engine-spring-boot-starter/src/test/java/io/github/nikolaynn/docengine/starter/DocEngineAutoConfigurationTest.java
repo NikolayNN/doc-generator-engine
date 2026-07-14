@@ -11,9 +11,13 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.annotation.ImportCandidates;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.support.SpringFactoriesLoader;
+
+import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -93,6 +97,36 @@ class DocEngineAutoConfigurationTest {
         assertThat(SpringFactoriesLoader.loadFactoryNames(
                 EnableAutoConfiguration.class, getClass().getClassLoader()))
             .contains(DocEngineAutoConfiguration.class.getName());
+    }
+
+    @Test
+    void contextCloseCleansUpTrackedTempFiles(@TempDir Path tmp) {
+        AtomicReference<Path> leftover = new AtomicReference<>();
+        runner.withPropertyValues("doc-engine.temp-dir=" + tmp)
+              .run(ctx -> {
+                  leftover.set(ctx.getBean(TempFileManager.class).createTempFile("ctx-", ".tmp"));
+                  assertThat(leftover.get()).exists();
+              });
+        // ApplicationContextRunner closes the context after the callback
+        assertThat(leftover.get())
+            .as("temp files must be cleaned up on context close, not only at JVM exit")
+            .doesNotExist();
+    }
+
+    @Test
+    void contextFailsToStartWhenNoTemplateEnginesPresent() {
+        runner.withUserConfiguration(SuppressJxlsConfig.class)
+              .run(ctx -> assertThat(ctx)
+                  .as("an engine with zero template engines must fail at startup, not on first generate()")
+                  .hasFailed());
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    static class SuppressJxlsConfig {
+        // a bean with this name suppresses the default via @ConditionalOnMissingBean(name=...)
+        // without contributing a TemplateEngine
+        @Bean(name = "jxlsTemplateEngine")
+        String jxlsTemplateEngine() { return "suppressed"; }
     }
 
     @Configuration(proxyBeanMethods = false)

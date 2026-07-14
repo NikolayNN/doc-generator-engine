@@ -51,9 +51,17 @@ class DefaultDocumentEngineTest {
     }
 
     @Test
+    void constructorRejectsEmptyTemplateEngines() {
+        assertThatThrownBy(() -> new DefaultDocumentEngine(
+                List.of(), List.of(), resolver, validator, tfm))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("templateEngine");
+    }
+
+    @Test
     void rejectsNullRequest() {
         DefaultDocumentEngine engine = new DefaultDocumentEngine(
-            List.of(), List.of(), resolver, validator, tfm);
+            List.of(mock(TemplateEngine.class)), List.of(), resolver, validator, tfm);
         assertThatThrownBy(() -> engine.generate(null))
             .isInstanceOf(InvalidGenerationRequestException.class);
     }
