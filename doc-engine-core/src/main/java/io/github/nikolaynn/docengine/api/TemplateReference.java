@@ -16,6 +16,19 @@ public interface TemplateReference {
 
     String hint();
 
+    /** A reference to in-memory template bytes. */
+    static TemplateReference ofBytes(byte[] bytes, DocumentFormat sourceFormat, String hint) {
+        return new BytesRef(bytes, sourceFormat, hint);
+    }
+
+    /**
+     * A reference to a template stream. The stream is consumed once during
+     * resolution, so a reference is single-use.
+     */
+    static TemplateReference ofStream(InputStream stream, DocumentFormat sourceFormat, String hint) {
+        return new InputStreamRef(stream, sourceFormat, hint);
+    }
+
     record InputStreamRef(InputStream stream, DocumentFormat sourceFormat, String hint)
             implements TemplateReference {
         public InputStreamRef {

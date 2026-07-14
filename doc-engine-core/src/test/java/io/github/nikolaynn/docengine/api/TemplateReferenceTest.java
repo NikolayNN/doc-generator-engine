@@ -68,6 +68,25 @@ class TemplateReferenceTest {
     }
 
     @Test
+    void ofBytesBuildsEqualBytesRef() {
+        byte[] payload = {1, 2, 3};
+        assertThat(TemplateReference.ofBytes(payload, DocumentFormat.XLSX, "r"))
+            .isInstanceOf(TemplateReference.BytesRef.class)
+            .isEqualTo(new TemplateReference.BytesRef(payload, DocumentFormat.XLSX, "r"));
+    }
+
+    @Test
+    void ofStreamBuildsInputStreamRefWithSameFields() {
+        InputStream in = new ByteArrayInputStream(new byte[]{1});
+        var ref = TemplateReference.ofStream(in, DocumentFormat.XLSX, "tpl");
+        assertThat(ref).isInstanceOf(TemplateReference.InputStreamRef.class);
+        var isr = (TemplateReference.InputStreamRef) ref;
+        assertThat(isr.stream()).isSameAs(in);
+        assertThat(isr.sourceFormat()).isEqualTo(DocumentFormat.XLSX);
+        assertThat(isr.hint()).isEqualTo("tpl");
+    }
+
+    @Test
     void customReferenceTypeResolvesThroughCustomResolver() throws Exception {
         // a third-party reference type, e.g. a key into S3/classpath/DB storage
         record KeyRef(String key, DocumentFormat sourceFormat, String hint) implements TemplateReference {}
