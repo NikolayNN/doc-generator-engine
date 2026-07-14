@@ -10,10 +10,14 @@ import java.util.Map;
  * Options for a single generation. All fields are optional; use {@link #builder()}
  * for readable construction or {@link #defaults()} for none.
  *
- * <p>Some options are advisory: the bundled components do not all honor them, but
- * every option is passed to the SPI contexts, so custom
- * {@link io.github.nikolaynn.docengine.spi.TemplateEngine} and
- * {@link io.github.nikolaynn.docengine.spi.DocumentConverter} implementations may.
+ * <p>Some options are advisory — the bundled components do not all honor them.
+ * {@code locale} and {@code engineHints} are passed only to
+ * {@link io.github.nikolaynn.docengine.spi.RenderContext}, so a custom
+ * {@link io.github.nikolaynn.docengine.spi.TemplateEngine} may honor them; a
+ * {@link io.github.nikolaynn.docengine.spi.DocumentConverter} receives only
+ * {@code timeout} (via {@link io.github.nikolaynn.docengine.spi.ConvertContext}).
+ * The bundled JXLS engine and process/pool converters honor only {@code timeout}
+ * as noted per field below.
  *
  * @param fileNameHint base name for the produced file (the extension is appended
  *        when missing); when {@code null} or blank a name is derived from the
@@ -24,8 +28,9 @@ import java.util.Map;
  * @param locale advisory: the bundled JXLS engine does not apply it; a custom
  *        {@code TemplateEngine} receives it via
  *        {@link io.github.nikolaynn.docengine.spi.RenderContext} and may honor it
- * @param engineHints advisory generic pass-through: the bundled components ignore
- *        these; custom engines/converters receive them via the SPI contexts
+ * @param engineHints advisory generic pass-through: the bundled JXLS engine ignores
+ *        these; a custom TemplateEngine receives them via RenderContext. A
+ *        DocumentConverter never receives them (ConvertContext has no such field)
  */
 public record GenerationOptions(
         String fileNameHint,
