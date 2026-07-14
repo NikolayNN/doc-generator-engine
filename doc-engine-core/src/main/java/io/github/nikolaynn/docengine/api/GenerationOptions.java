@@ -6,6 +6,27 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * Options for a single generation. All fields are optional; use {@link #builder()}
+ * for readable construction or {@link #defaults()} for none.
+ *
+ * <p>Some options are advisory: the bundled components do not all honor them, but
+ * every option is passed to the SPI contexts, so custom
+ * {@link io.github.nikolaynn.docengine.spi.TemplateEngine} and
+ * {@link io.github.nikolaynn.docengine.spi.DocumentConverter} implementations may.
+ *
+ * @param fileNameHint base name for the produced file (the extension is appended
+ *        when missing); when {@code null} or blank a name is derived from the
+ *        template hint
+ * @param timeout conversion timeout; honored ONLY by the process-based LibreOffice
+ *        converter. The JXLS renderer and the JODConverter pool ignore it (the
+ *        pool applies its own configured task timeout)
+ * @param locale advisory: the bundled JXLS engine does not apply it; a custom
+ *        {@code TemplateEngine} receives it via
+ *        {@link io.github.nikolaynn.docengine.spi.RenderContext} and may honor it
+ * @param engineHints advisory generic pass-through: the bundled components ignore
+ *        these; custom engines/converters receive them via the SPI contexts
+ */
 public record GenerationOptions(
         String fileNameHint,
         Duration timeout,
@@ -22,7 +43,48 @@ public record GenerationOptions(
             : Collections.unmodifiableMap(new LinkedHashMap<>(engineHints));
     }
 
+    /** Options with nothing set. */
     public static GenerationOptions defaults() {
         return DEFAULTS;
+    }
+
+    /** A fresh builder; all fields start unset. */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /** Mutable builder for {@link GenerationOptions}. */
+    public static final class Builder {
+        private String fileNameHint;
+        private Duration timeout;
+        private Locale locale;
+        private Map<String, Object> engineHints;
+
+        private Builder() {}
+
+        public Builder fileNameHint(String v) { this.fileNameHint = v; return this; }
+
+        public Builder timeout(Duration v) { this.timeout = v; return this; }
+
+        public Builder locale(Locale v) { this.locale = v; return this; }
+
+        /** Replaces the accumulated hints ({@code null} clears them). */
+        public Builder engineHints(Map<String, Object> hints) {
+            this.engineHints = hints == null ? null : new LinkedHashMap<>(hints);
+            return this;
+        }
+
+        /** Adds or overwrites a single hint, preserving insertion order. */
+        public Builder engineHint(String key, Object value) {
+            if (engineHints == null) {
+                engineHints = new LinkedHashMap<>();
+            }
+            engineHints.put(key, value);
+            return this;
+        }
+
+        public GenerationOptions build() {
+            return new GenerationOptions(fileNameHint, timeout, locale, engineHints);
+        }
     }
 }
