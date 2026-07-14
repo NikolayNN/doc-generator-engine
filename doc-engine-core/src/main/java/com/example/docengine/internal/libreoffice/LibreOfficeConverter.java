@@ -53,6 +53,7 @@ public class LibreOfficeConverter implements DocumentConverter {
             Duration timeout = ctx.timeout() == null ? defaultTimeout : ctx.timeout();
 
             ProcessBuilder pb = new ProcessBuilder(buildCommand(input, outDir))
+                .redirectOutput(ProcessBuilder.Redirect.DISCARD)
                 .redirectErrorStream(false);
             if (workingDir != null) {
                 pb.directory(workingDir.toFile());
@@ -66,25 +67,27 @@ public class LibreOfficeConverter implements DocumentConverter {
                     "failed to start LibreOffice: " + e.getMessage(), e, false);
             }
 
-            String stderr;
+            StringBuilder stderrBuf = new StringBuilder();
+            Thread stderrReader = startStderrReader(process, stderrBuf);
+
             boolean finished;
             try {
-                stderr = readStderrAsync(process);
                 finished = process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
-                process.destroyForcibly();
+                destroyProcessTree(process);
                 Thread.currentThread().interrupt();
                 throw new DocumentConversionException(ctx.templateHint(), from, to,
                     "interrupted while waiting for LibreOffice", e, false);
             }
 
             if (!finished) {
-                process.destroyForcibly();
+                destroyProcessTree(process);
                 throw DocumentConversionException.timeout(ctx.templateHint(), from, to, timeout);
             }
 
             int exit = process.exitValue();
             if (exit != 0) {
+                String stderr = awaitStderr(stderrReader, stderrBuf);
                 throw new DocumentConversionException(ctx.templateHint(), from, to,
                     "LibreOffice exited with code " + exit + "; stderr=" + truncate(stderr),
                     null, false);
@@ -115,6 +118,9 @@ public class LibreOfficeConverter implements DocumentConverter {
     private List<String> buildCommand(Path input, Path outDir) {
         List<String> cmd = new ArrayList<>();
         cmd.add(executable == null ? "soffice" : executable.toString());
+        // isolated per-invocation profile: concurrent soffice instances must not share
+        // the default user profile, or they hang/fail on its lock
+        cmd.add("-env:UserInstallation=" + outDir.resolve("profile").toUri());
         cmd.add("--headless");
         cmd.add("--convert-to");
         cmd.add("pdf");
@@ -151,8 +157,7 @@ public class LibreOfficeConverter implements DocumentConverter {
         }
     }
 
-    private static String readStderrAsync(Process p) {
-        StringBuilder sb = new StringBuilder();
+    private static Thread startStderrReader(Process p, StringBuilder sb) {
         Thread t = new Thread(() -> {
             try (BufferedReader r = new BufferedReader(
                     new InputStreamReader(p.getErrorStream(), StandardCharsets.UTF_8))) {
@@ -164,8 +169,22 @@ public class LibreOfficeConverter implements DocumentConverter {
         }, "soffice-stderr");
         t.setDaemon(true);
         t.start();
-        try { t.join(500); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+        return t;
+    }
+
+    private static String awaitStderr(Thread reader, StringBuilder sb) {
+        // the process has already exited, so its stderr stream is at EOF; the join
+        // bound only guards against a pathologically stuck reader
+        try { reader.join(2000); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
         synchronized (sb) { return sb.toString(); }
+    }
+
+    private static void destroyProcessTree(Process process) {
+        // snapshot descendants before killing the parent: soffice is a launcher whose
+        // soffice.bin child does the work and gets re-parented once the launcher dies
+        List<ProcessHandle> descendants = process.toHandle().descendants().toList();
+        process.destroyForcibly();
+        descendants.forEach(ProcessHandle::destroyForcibly);
     }
 
     private static String truncate(String s) {
