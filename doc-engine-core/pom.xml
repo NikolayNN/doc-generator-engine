@@ -15,6 +15,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.github.nikolaynn</groupId>
+            <artifactId>doc-engine-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jxls</groupId>
             <artifactId>jxls</artifactId>
         </dependency>

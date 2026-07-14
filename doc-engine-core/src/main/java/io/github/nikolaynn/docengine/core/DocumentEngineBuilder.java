@@ -1,5 +1,6 @@
-package io.github.nikolaynn.docengine.api;
+package io.github.nikolaynn.docengine.core;
 
+import io.github.nikolaynn.docengine.api.DocumentEngine;
 import io.github.nikolaynn.docengine.internal.DefaultDocumentEngine;
 import io.github.nikolaynn.docengine.internal.jxls.JxlsTemplateEngine;
 import io.github.nikolaynn.docengine.internal.libreoffice.LibreOfficeConverter;

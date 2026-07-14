@@ -2,6 +2,7 @@ package io.github.nikolaynn.docengine.api;
 
 import io.github.nikolaynn.docengine.spi.ResolvedTemplate;
 import io.github.nikolaynn.docengine.spi.TemplateResolver;
+import io.github.nikolaynn.docengine.core.DocumentEngineBuilder;
 import io.github.nikolaynn.docengine.support.TemplateFixtures;
 import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;

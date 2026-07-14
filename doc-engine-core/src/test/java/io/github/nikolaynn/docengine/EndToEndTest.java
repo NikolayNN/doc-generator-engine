@@ -1,7 +1,7 @@
 package io.github.nikolaynn.docengine;
 
 import io.github.nikolaynn.docengine.api.DocumentEngine;
-import io.github.nikolaynn.docengine.api.DocumentEngineBuilder;
+import io.github.nikolaynn.docengine.core.DocumentEngineBuilder;
 import io.github.nikolaynn.docengine.api.DocumentFormat;
 import io.github.nikolaynn.docengine.api.GenerationMetadata;
 import io.github.nikolaynn.docengine.api.GenerationOptions;

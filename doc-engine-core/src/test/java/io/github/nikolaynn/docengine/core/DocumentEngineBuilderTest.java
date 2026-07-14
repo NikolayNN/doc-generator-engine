@@ -1,5 +1,10 @@
-package io.github.nikolaynn.docengine.api;
+package io.github.nikolaynn.docengine.core;
 
+import io.github.nikolaynn.docengine.api.DocumentEngine;
+import io.github.nikolaynn.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.GenerationRequest;
+import io.github.nikolaynn.docengine.api.GenerationResult;
+import io.github.nikolaynn.docengine.api.TemplateReference;
 import io.github.nikolaynn.docengine.spi.DocumentConverter;
 import io.github.nikolaynn.docengine.spi.TempFileManager;
 import io.github.nikolaynn.docengine.spi.TemplateEngine;
