@@ -8,9 +8,10 @@ Java-библиотека для генерации документов по о
 
 | Артефакт | Назначение |
 |---|---|
-| `doc-engine-core` | Чистая Java-библиотека (без Spring). Публичный API, SPI, JXLS- и LibreOffice-реализации. |
+| `doc-engine-api` | Публичный API и SPI (`TemplateEngine`, `DocumentConverter`, контексты, типы запроса/результата, исключения). Без сторонних зависимостей — от него зависят реализаторы SPI. |
+| `doc-engine-core` | Реализации поверх API: JXLS-движок, LibreOffice-конвертер и plain-Java входная точка `DocumentEngineBuilder`. Тянет JXLS/POI. |
 | `doc-engine-spring-boot-starter` | Spring Boot 2.7 auto-configuration (совместима с 3.x). Тонкая обёртка поверх core. |
-| `doc-engine-jodconverter` | Быстрая PDF-конверсия: пул долгоживущих LibreOffice-процессов (JODConverter). Опциональный модуль. |
+| `doc-engine-jodconverter` | Быстрая PDF-конверсия: пул долгоживущих LibreOffice-процессов (JODConverter). Зависит только от `doc-engine-api`. Опциональный модуль. |
 
 ## Требования
 
@@ -62,6 +63,8 @@ Java-библиотека для генерации документов по о
 `id` репозитория в `<repositories>` должен совпадать с `id` сервера в `settings.xml`.
 
 ## Быстрый старт — plain Java
+
+> `DocumentEngineBuilder` находится в пакете `io.github.nikolaynn.docengine.core` (модуль `doc-engine-core`).
 
 ```java
 // полный дефолтный стек: JXLS + LibreOffice (soffice из PATH) + системный temp
