@@ -63,10 +63,16 @@ Java-библиотека для генерации документов по о
 ## Быстрый старт — plain Java
 
 ```java
+// полный дефолтный стек: JXLS + LibreOffice (soffice из PATH) + системный temp
 DocumentEngine engine = DocumentEngineBuilder.create()
-    .tempFileManager(new DefaultTempFileManager(Path.of("/tmp/doc-engine"), true))
-    .addTemplateEngine(new JxlsTemplateEngine())
-    .addConverter(new LibreOfficeConverter(null, Duration.ofSeconds(60), null))
+    .withDefaults()
+    .build();
+
+// или с явной настройкой компонентов — по-прежнему без импортов internal-классов:
+DocumentEngine custom = DocumentEngineBuilder.create()
+    .withJxlsEngine()
+    .withLibreOfficeConverter(Path.of("/usr/bin/soffice"), Duration.ofSeconds(60), null)
+    .withDefaultTempFileManager(Path.of("/tmp/doc-engine"), true)
     .build();
 
 byte[] templateBytes = Files.readAllBytes(Path.of("invoice.xlsx"));
@@ -88,7 +94,7 @@ GenerationResult result = engine.generate(request);
 // result.fileName(), result.mimeType(), result.content()
 ```
 
-`LibreOfficeConverter` нужен только для генерации PDF. Если в `targetFormat` всегда `XLSX`, его можно не добавлять.
+Конвертер LibreOffice нужен только для генерации PDF. Если в `targetFormat` всегда `XLSX`, `withLibreOfficeConverter(...)` можно не вызывать (а `withDefaults()` добавляет его на всякий случай — при отсутствии `soffice` он просто не используется, пока не запрошена конвертация).
 
 ## Быстрый старт — Spring Boot
 
@@ -143,7 +149,7 @@ doc-engine:
 - **Циклы по строкам.** Комментарий JXLS в первой ячейке строки-образца: `jx:each(items="items", var="item", lastCell="C2")`. Строка раскрывается по списку, стили и границы сохраняются, последующие строки сдвигаются.
 - **Условные блоки.** `jx:if(condition="...", lastCell="...")`.
 - **Группировка, вложенные циклы, multisheet** — стандартные возможности JXLS.
-- **Формулы.** `=A1+A2`, `=SUM(D2:D5)` остаются формулами; JXLS корректно сдвигает ссылки на расширяющиеся диапазоны. После рендера движок вызывает `FormulaEvaluator.evaluateAll()` и `setForceFormulaRecalculation(true)`, поэтому в XLSX лежат и формулы, и пересчитанные значения.
+- **Формулы.** `=A1+A2`, `=SUM(D2:D5)` остаются формулами; JXLS корректно сдвигает ссылки на расширяющиеся диапазоны. Движок ставит `setForceFormulaRecalculation(true)`, поэтому значения пересчитываются при открытии файла (Excel/LibreOffice) и при конвертации в PDF. POI-вычисление на стороне библиотеки не выполняется — это экономит память/CPU и не падает на функциях, которые POI не реализует.
 
 Подробнее — документация JXLS 2.x: https://jxls.sourceforge.net/
 

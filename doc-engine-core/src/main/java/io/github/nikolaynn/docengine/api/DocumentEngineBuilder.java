@@ -1,7 +1,10 @@
 package io.github.nikolaynn.docengine.api;
 
 import io.github.nikolaynn.docengine.internal.DefaultDocumentEngine;
+import io.github.nikolaynn.docengine.internal.jxls.JxlsTemplateEngine;
+import io.github.nikolaynn.docengine.internal.libreoffice.LibreOfficeConverter;
 import io.github.nikolaynn.docengine.internal.resolver.InputStreamTemplateResolver;
+import io.github.nikolaynn.docengine.internal.tempfile.DefaultTempFileManager;
 import io.github.nikolaynn.docengine.internal.validator.NoopTemplateValidator;
 import io.github.nikolaynn.docengine.spi.DocumentConverter;
 import io.github.nikolaynn.docengine.spi.TempFileManager;
@@ -9,6 +12,8 @@ import io.github.nikolaynn.docengine.spi.TemplateEngine;
 import io.github.nikolaynn.docengine.spi.TemplateResolver;
 import io.github.nikolaynn.docengine.spi.TemplateValidator;
 
+import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -39,6 +44,38 @@ public final class DocumentEngineBuilder {
     }
     public DocumentEngineBuilder addConverter(DocumentConverter dc) {
         converters.add(Objects.requireNonNull(dc)); return this;
+    }
+
+    /**
+     * Full default stack: JXLS engine, LibreOffice converter (soffice from PATH)
+     * and a system-temp file manager with cleanup on JVM shutdown. The converter
+     * is only exercised when a conversion is requested, so a missing soffice
+     * does not affect XLSX-to-XLSX generation.
+     */
+    public DocumentEngineBuilder withDefaults() {
+        return withJxlsEngine()
+            .withLibreOfficeConverter()
+            .withDefaultTempFileManager(null, true);
+    }
+
+    public DocumentEngineBuilder withJxlsEngine() {
+        return addTemplateEngine(new JxlsTemplateEngine());
+    }
+
+    /** LibreOffice converter with soffice from PATH and the default timeout. */
+    public DocumentEngineBuilder withLibreOfficeConverter() {
+        return withLibreOfficeConverter(null, null, null);
+    }
+
+    public DocumentEngineBuilder withLibreOfficeConverter(Path executable,
+                                                          Duration defaultTimeout,
+                                                          Path workingDir) {
+        return addConverter(new LibreOfficeConverter(executable, defaultTimeout, workingDir));
+    }
+
+    /** @param rootDir temp root directory; {@code null} means the system temp dir */
+    public DocumentEngineBuilder withDefaultTempFileManager(Path rootDir, boolean cleanupOnShutdown) {
+        return tempFileManager(new DefaultTempFileManager(rootDir, cleanupOnShutdown));
     }
 
     public DocumentEngine build() {
