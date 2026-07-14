@@ -1,2 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+io.github.nikolaynn.docengine.starter.JodConverterAutoConfiguration,\
 io.github.nikolaynn.docengine.starter.DocEngineAutoConfiguration

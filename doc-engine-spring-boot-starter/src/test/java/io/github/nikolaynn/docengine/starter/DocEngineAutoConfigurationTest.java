@@ -25,7 +25,8 @@ import static org.mockito.Mockito.mock;
 class DocEngineAutoConfigurationTest {
 
     private final ApplicationContextRunner runner = new ApplicationContextRunner()
-        .withConfiguration(AutoConfigurations.of(DocEngineAutoConfiguration.class));
+        .withConfiguration(AutoConfigurations.of(
+            JodConverterAutoConfiguration.class, DocEngineAutoConfiguration.class));
 
     @Test
     void defaultsAllBeansPresent() {
@@ -35,16 +36,28 @@ class DocEngineAutoConfigurationTest {
             assertThat(ctx).hasSingleBean(TemplateResolver.class);
             assertThat(ctx).hasSingleBean(TemplateValidator.class);
             assertThat(ctx).hasBean("jxlsTemplateEngine");
-            assertThat(ctx).hasBean("libreOfficeConverter");
+            assertThat(ctx).hasBean("jodDocumentConverter");
+            assertThat(ctx).doesNotHaveBean("libreOfficeConverter");
         });
     }
 
     @Test
-    void libreOfficeConverterCanBeDisabledViaProperty() {
-        runner.withPropertyValues("doc-engine.converter.libreoffice.enabled=false")
+    void jodDisabledFallsBackToProcessConverter() {
+        runner.withPropertyValues("doc-engine.converter.jod.enabled=false")
+              .run(ctx -> {
+                  assertThat(ctx).doesNotHaveBean("jodDocumentConverter");
+                  assertThat(ctx).hasBean("libreOfficeConverter");
+              });
+    }
+
+    @Test
+    void bothConvertersCanBeDisabled() {
+        runner.withPropertyValues(
+                "doc-engine.converter.jod.enabled=false",
+                "doc-engine.converter.libreoffice.enabled=false")
               .run(ctx -> {
                   assertThat(ctx).hasSingleBean(DocumentEngine.class);
-                  assertThat(ctx).doesNotHaveBean("libreOfficeConverter");
+                  assertThat(ctx.getBeansOfType(DocumentConverter.class)).isEmpty();
               });
     }
 
@@ -58,10 +71,25 @@ class DocEngineAutoConfigurationTest {
     }
 
     @Test
-    void userConverterReplacesDefault() {
+    void userConverterSuppressesAllDefaultConverters() {
         runner.withUserConfiguration(UserConverterConfig.class).run(ctx -> {
-            assertThat(ctx.getBeansOfType(DocumentConverter.class).values())
-                .anyMatch(c -> c == ctx.getBean("libreOfficeConverter"));
+            assertThat(ctx.getBeansOfType(DocumentConverter.class)).hasSize(1);
+            assertThat(ctx).doesNotHaveBean("jodDocumentConverter");
+            assertThat(ctx).doesNotHaveBean("libreOfficeConverter");
+        });
+    }
+
+    @Test
+    void jodPropertiesBind() {
+        runner.withPropertyValues(
+            "doc-engine.converter.jod.pool-size=3",
+            "doc-engine.converter.jod.task-timeout=90s",
+            "doc-engine.converter.jod.max-tasks-per-process=50"
+        ).run(ctx -> {
+            DocEngineProperties p = ctx.getBean(DocEngineProperties.class);
+            assertThat(p.converter().jod().poolSize()).isEqualTo(3);
+            assertThat(p.converter().jod().taskTimeout().toSeconds()).isEqualTo(90);
+            assertThat(p.converter().jod().maxTasksPerProcess()).isEqualTo(50);
         });
     }
 
@@ -90,6 +118,7 @@ class DocEngineAutoConfigurationTest {
             .as("Boot 3 loads auto-configurations only from META-INF/spring/"
                 + "org.springframework.boot.autoconfigure.AutoConfiguration.imports")
             .contains(DocEngineAutoConfiguration.class.getName());
+        assertThat(candidates).contains(JodConverterAutoConfiguration.class.getName());
     }
 
     @Test
@@ -136,7 +165,7 @@ class DocEngineAutoConfigurationTest {
 
     @Configuration(proxyBeanMethods = false)
     static class UserConverterConfig {
-        @Bean(name = "libreOfficeConverter")
+        @Bean
         DocumentConverter userConverter() { return mock(DocumentConverter.class); }
     }
 }

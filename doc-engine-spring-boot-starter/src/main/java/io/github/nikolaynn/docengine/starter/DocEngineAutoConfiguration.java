@@ -49,7 +49,7 @@ public class DocEngineAutoConfiguration {
     }
 
     @Bean(name = "libreOfficeConverter")
-    @ConditionalOnMissingBean(name = "libreOfficeConverter")
+    @ConditionalOnMissingBean(DocumentConverter.class)
     @ConditionalOnProperty(prefix = "doc-engine.converter.libreoffice",
                            name = "enabled", havingValue = "true", matchIfMissing = true)
     public DocumentConverter libreOfficeConverter(DocEngineProperties props) {
