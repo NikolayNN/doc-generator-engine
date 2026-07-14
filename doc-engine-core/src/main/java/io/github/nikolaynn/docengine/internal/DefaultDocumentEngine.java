@@ -58,6 +58,14 @@ public class DefaultDocumentEngine implements DocumentEngine {
 
     @Override
     public void close() {
+        for (DocumentConverter converter : converters) {
+            try {
+                converter.close();
+            } catch (Exception e) {
+                log.warn("failed to close converter {}: {}",
+                    converter.getClass().getSimpleName(), e.getMessage());
+            }
+        }
         tempFiles.close();
     }
 

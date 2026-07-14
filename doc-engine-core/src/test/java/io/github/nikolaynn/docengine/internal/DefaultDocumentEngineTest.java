@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -191,6 +192,33 @@ class DefaultDocumentEngineTest {
 
         var result = engine.generate(req(DocumentFormat.XLSX, "myhint"));
         assertThat(result.fileName()).startsWith("myhint-").endsWith(".xlsx");
+    }
+
+    @Test
+    void closeClosesConvertersAndTempFileManager() {
+        AtomicBoolean converterClosed = new AtomicBoolean();
+        AtomicBoolean tfmClosed = new AtomicBoolean();
+        DocumentConverter converter = new DocumentConverter() {
+            @Override public boolean supports(DocumentFormat from, DocumentFormat to) { return false; }
+            @Override public Path convert(Path input, DocumentFormat from, DocumentFormat to, ConvertContext ctx) {
+                throw new UnsupportedOperationException();
+            }
+            @Override public void close() { converterClosed.set(true); }
+        };
+        TempFileManager manager = new TempFileManager() {
+            @Override public Path createTempFile(String prefix, String suffix) {
+                throw new UnsupportedOperationException();
+            }
+            @Override public void delete(Path path) {}
+            @Override public void close() { tfmClosed.set(true); }
+        };
+        var engine = new DefaultDocumentEngine(
+            List.of(mock(TemplateEngine.class)), List.of(converter), resolver, validator, manager);
+
+        engine.close();
+
+        assertThat(converterClosed).isTrue();
+        assertThat(tfmClosed).isTrue();
     }
 
     private static GenerationRequest req(DocumentFormat target, String hint) {
