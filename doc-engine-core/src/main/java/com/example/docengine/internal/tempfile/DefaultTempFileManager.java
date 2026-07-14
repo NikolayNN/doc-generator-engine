@@ -20,6 +20,14 @@ public class DefaultTempFileManager implements TempFileManager {
 
     public DefaultTempFileManager(Path rootDir, boolean cleanupOnShutdown) {
         this.rootDir = rootDir;
+        if (rootDir != null) {
+            try {
+                Files.createDirectories(rootDir);
+            } catch (IOException e) {
+                throw new TempFileException(null, null, null,
+                    "failed to create temp root directory " + rootDir, e);
+            }
+        }
         if (cleanupOnShutdown) {
             Runtime.getRuntime().addShutdownHook(new Thread(this::cleanupAll, "doc-engine-temp-cleanup"));
         }

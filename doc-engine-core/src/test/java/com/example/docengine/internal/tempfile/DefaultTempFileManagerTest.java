@@ -58,9 +58,32 @@ class DefaultTempFileManagerTest {
     }
 
     @Test
-    void wrapsIoErrorInTempFileException() {
-        var mgr = new DefaultTempFileManager(Path.of("/no/such/dir/should/not/exist/zzz"), false);
+    void wrapsIoErrorInTempFileException(@TempDir Path tmp) throws Exception {
+        Path root = tmp.resolve("root");
+        var mgr = new DefaultTempFileManager(root, false);
+        Files.deleteIfExists(root); // force an IO error at file-creation time
         assertThatThrownBy(() -> mgr.createTempFile("x", ".y"))
             .isInstanceOf(TempFileException.class);
+    }
+
+    @Test
+    void createsMissingRootDirOnConstruction(@TempDir Path tmp) {
+        Path root = tmp.resolve("nested").resolve("doc-engine");
+        var mgr = new DefaultTempFileManager(root, false);
+
+        Path file = mgr.createTempFile("doc-", ".xlsx");
+
+        assertThat(file).exists();
+        assertThat(file.getParent()).isEqualTo(root);
+    }
+
+    @Test
+    void constructorFailsFastWhenRootDirCannotBeCreated(@TempDir Path tmp) throws Exception {
+        Path blocker = Files.writeString(tmp.resolve("blocker"), "x");
+        Path invalidRoot = blocker.resolve("sub"); // parent is a regular file
+
+        assertThatThrownBy(() -> new DefaultTempFileManager(invalidRoot, false))
+            .isInstanceOf(TempFileException.class)
+            .hasMessageContaining("blocker");
     }
 }
