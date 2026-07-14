@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -25,6 +25,9 @@ public class LibreOfficeConverter implements DocumentConverter {
 
     private static final Logger log = LoggerFactory.getLogger(LibreOfficeConverter.class);
     private static final int STDERR_TRUNCATE = 2000;
+    // native processes emit stderr in the platform charset (e.g. Cp1252/Cp1251 on
+    // Windows), not necessarily UTF-8 or this JVM's default
+    private static final Charset PROCESS_OUTPUT_CHARSET = processOutputCharset();
 
     private final Path executable;
     private final Duration defaultTimeout;
@@ -160,7 +163,7 @@ public class LibreOfficeConverter implements DocumentConverter {
     private static Thread startStderrReader(Process p, StringBuilder sb) {
         Thread t = new Thread(() -> {
             try (BufferedReader r = new BufferedReader(
-                    new InputStreamReader(p.getErrorStream(), StandardCharsets.UTF_8))) {
+                    new InputStreamReader(p.getErrorStream(), PROCESS_OUTPUT_CHARSET))) {
                 String line;
                 while ((line = r.readLine()) != null) {
                     synchronized (sb) { sb.append(line).append('\n'); }
@@ -185,6 +188,18 @@ public class LibreOfficeConverter implements DocumentConverter {
         List<ProcessHandle> descendants = process.toHandle().descendants().toList();
         process.destroyForcibly();
         descendants.forEach(ProcessHandle::destroyForcibly);
+    }
+
+    private static Charset processOutputCharset() {
+        String enc = System.getProperty("native.encoding");
+        if (enc != null) {
+            try {
+                return Charset.forName(enc);
+            } catch (IllegalArgumentException ignored) {
+                // fall through to the JVM default
+            }
+        }
+        return Charset.defaultCharset();
     }
 
     private static String truncate(String s) {

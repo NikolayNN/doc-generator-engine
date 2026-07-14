@@ -148,6 +148,21 @@ class LibreOfficeConverterTest {
             .hasMessageContaining("BOOM-DIAGNOSTIC");
     }
 
+    @Test
+    void decodesStderrWithPlatformNativeEncoding(@TempDir Path tmp) throws Exception {
+        Path exe = createFakeSoffice(tmp, Map.of(
+            "fake.stderrNonAscii", "true",
+            "fake.exit", "9"));
+        var c = new LibreOfficeConverter(exe, Duration.ofSeconds(30), tmp);
+        TempFileManager tfm = new DefaultTempFileManager(tmp, false);
+
+        assertThatThrownBy(() -> c.convert(stubInput(tmp, "enc"), DocumentFormat.XLSX, DocumentFormat.PDF,
+                new ConvertContext(Duration.ofSeconds(30), tfm, "tpl")))
+            .isInstanceOf(DocumentConversionException.class)
+            .hasMessageContaining("exited with code 9")
+            .hasMessageContaining("STDERR-DIAGNOSE-ÄÖÜ");
+    }
+
     private static Path stubInput(Path dir, String name) throws IOException {
         Path input = dir.resolve(name + ".xlsx");
         Files.writeString(input, "stub");

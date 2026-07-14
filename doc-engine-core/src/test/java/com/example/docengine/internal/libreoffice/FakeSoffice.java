@@ -70,6 +70,12 @@ public final class FakeSoffice {
             System.err.println(stderrText);
         }
 
+        if (Boolean.getBoolean("fake.stderrNonAscii")) {
+            // encoded by this child JVM's platform charset (Cp1252 on western Windows),
+            // NOT UTF-8 — exercises the parent's stderr decoding
+            System.err.println("STDERR-DIAGNOSE-ÄÖÜ");
+        }
+
         if (Boolean.getBoolean("fake.createOutput")) {
             Path outDir = null;
             for (int i = 0; i < args.length - 1; i++) {
