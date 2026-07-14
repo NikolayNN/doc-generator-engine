@@ -10,6 +10,7 @@ Java-библиотека для генерации документов по о
 |---|---|
 | `doc-engine-core` | Чистая Java-библиотека (без Spring). Публичный API, SPI, JXLS- и LibreOffice-реализации. |
 | `doc-engine-spring-boot-starter` | Spring Boot 2.7 auto-configuration (совместима с 3.x). Тонкая обёртка поверх core. |
+| `doc-engine-jodconverter` | Быстрая PDF-конверсия: пул долгоживущих LibreOffice-процессов (JODConverter). Опциональный модуль. |
 
 ## Требования
 
@@ -109,6 +110,46 @@ engine.generateToFile(request, Path.of("/reports/invoice.pdf"));
 
 `DocumentEngine` и `TempFileManager` — `AutoCloseable`: `close()` удаляет отслеживаемые временные файлы и снимает shutdown-хук. Движок — application-scoped синглтон: создайте один раз и закройте при остановке приложения (в Spring это происходит автоматически при закрытии контекста).
 
+## Быстрая конверсия PDF: пул LibreOffice
+
+По умолчанию конвертация в PDF запускает новый процесс `soffice` на каждый
+документ (cold start 2–6 секунд). Для постоянного потока конверсий подключите
+модуль пула:
+
+```xml
+<dependency>
+    <groupId>io.github.nikolaynn</groupId>
+    <artifactId>doc-engine-jodconverter</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
+В Spring Boot этого достаточно: конвертер пула автоматически становится
+основным, процессный отключается (откат: `doc-engine.converter.jod.enabled: false`).
+Пул стартует лениво при первой конверсии и останавливается при закрытии
+контекста.
+
+Plain Java:
+
+```java
+JodDocumentConverter jod = new JodDocumentConverter(
+    JodDocumentConverter.Config.builder().poolSize(2).build());
+jod.start(); // необязательный прогрев; иначе пул стартует при первой конверсии
+
+DocumentEngine engine = DocumentEngineBuilder.create()
+    .withJxlsEngine()
+    .addConverter(jod)
+    .withDefaultTempFileManager(null, true)
+    .build();
+// engine.close() остановит пул
+```
+
+Свойства стартера (`doc-engine.converter.jod.*`): `enabled` (true),
+`office-home` (автодетект), `pool-size` (1), `task-timeout` (120s),
+`task-queue-timeout` (30s), `max-tasks-per-process` (200).
+Примечание: `GenerationOptions.timeout` этим конвертером не применяется —
+таймаут задаётся на уровне пула.
+
 ## Быстрый старт — Spring Boot
 
 Подключите стартер:
@@ -152,6 +193,10 @@ doc-engine:
       executable: /usr/bin/soffice     # null = искать в PATH
       timeout: 60s
       working-dir: /var/tmp/doc-engine
+    jod:                                 # если подключён doc-engine-jodconverter
+      enabled: true
+      pool-size: 2
+      task-timeout: 120s
 ```
 
 ## Шаблоны (JXLS)
