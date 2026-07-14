@@ -16,8 +16,9 @@ import java.util.Map;
  * {@link io.github.nikolaynn.docengine.spi.TemplateEngine} may honor them; a
  * {@link io.github.nikolaynn.docengine.spi.DocumentConverter} receives only
  * {@code timeout} (via {@link io.github.nikolaynn.docengine.spi.ConvertContext}).
- * The bundled JXLS engine and process/pool converters honor only {@code timeout}
- * as noted per field below.
+ * Of these advisory options, the only one any bundled component honors is
+ * {@code timeout}, and only the process-based LibreOffice converter honors it
+ * (see the per-field notes below).
  *
  * @param fileNameHint base name for the produced file (the extension is appended
  *        when missing); when {@code null} or blank a name is derived from the
