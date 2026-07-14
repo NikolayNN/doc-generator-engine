@@ -3,6 +3,7 @@ package io.github.nikolaynn.docengine;
 import io.github.nikolaynn.docengine.api.DocumentEngine;
 import io.github.nikolaynn.docengine.api.DocumentEngineBuilder;
 import io.github.nikolaynn.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.GenerationMetadata;
 import io.github.nikolaynn.docengine.api.GenerationOptions;
 import io.github.nikolaynn.docengine.api.GenerationRequest;
 import io.github.nikolaynn.docengine.api.GenerationResult;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -184,6 +186,44 @@ class EndToEndTest {
         assertThat(result.fileName()).endsWith(".pdf");
         assertThat(result.mimeType()).isEqualTo("application/pdf");
         assertThat(result.content()).startsWith(new byte[]{'%', 'P', 'D', 'F'});
+    }
+
+    @Test
+    void generateToStreamsDocumentToOutputStream(@TempDir Path tmp) throws Exception {
+        DocumentEngine engine = newXlsxEngine(tmp);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        GenerationMetadata meta = engine.generateTo(request(SIMPLE,
+            Map.of("greeting", "Hello", "name", "Stream"), DocumentFormat.XLSX), out);
+
+        assertThat(meta.fileName()).endsWith(".xlsx");
+        assertThat(meta.mimeType()).isEqualTo(DocumentFormat.XLSX.mimeType());
+        assertThat(meta.format()).isEqualTo(DocumentFormat.XLSX);
+        try (Workbook wb = WorkbookFactory.create(new ByteArrayInputStream(out.toByteArray()))) {
+            assertThat(wb.getSheetAt(0).getRow(0).getCell(0).getStringCellValue()).isEqualTo("Hello");
+        }
+        try (var leftovers = Files.list(tmp)) {
+            assertThat(leftovers).as("no temp files may survive generateTo").isEmpty();
+        }
+    }
+
+    @Test
+    void generateToFileWritesDocumentToTargetPath(@TempDir Path tmp) throws Exception {
+        DocumentEngine engine = newXlsxEngine(tmp.resolve("work"));
+        Path target = tmp.resolve("out/report.xlsx");
+        Files.createDirectories(target.getParent());
+
+        GenerationMetadata meta = engine.generateToFile(request(SIMPLE,
+            Map.of("greeting", "Hi", "name", "File"), DocumentFormat.XLSX), target);
+
+        assertThat(meta.format()).isEqualTo(DocumentFormat.XLSX);
+        assertThat(target).exists();
+        try (Workbook wb = WorkbookFactory.create(Files.newInputStream(target))) {
+            assertThat(wb.getSheetAt(0).getRow(0).getCell(1).getStringCellValue()).isEqualTo("File");
+        }
+        try (var leftovers = Files.list(tmp.resolve("work"))) {
+            assertThat(leftovers).as("no temp files may survive generateToFile").isEmpty();
+        }
     }
 
     private static GenerationRequest request(String resource, Map<String, Object> data,

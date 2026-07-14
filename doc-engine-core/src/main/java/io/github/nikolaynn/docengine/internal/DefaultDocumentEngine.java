@@ -2,10 +2,12 @@ package io.github.nikolaynn.docengine.internal;
 
 import io.github.nikolaynn.docengine.api.DocumentEngine;
 import io.github.nikolaynn.docengine.api.DocumentFormat;
+import io.github.nikolaynn.docengine.api.GenerationMetadata;
 import io.github.nikolaynn.docengine.api.GenerationOptions;
 import io.github.nikolaynn.docengine.api.GenerationRequest;
 import io.github.nikolaynn.docengine.api.GenerationResult;
 import io.github.nikolaynn.docengine.api.exception.InvalidGenerationRequestException;
+import io.github.nikolaynn.docengine.api.exception.TempFileException;
 import io.github.nikolaynn.docengine.api.exception.UnsupportedConversionException;
 import io.github.nikolaynn.docengine.api.exception.UnsupportedTemplateFormatException;
 import io.github.nikolaynn.docengine.spi.ConvertContext;
@@ -20,8 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -59,6 +63,37 @@ public class DefaultDocumentEngine implements DocumentEngine {
 
     @Override
     public GenerationResult generate(GenerationRequest request) {
+        return generateInternal(request, (output, meta) ->
+            new GenerationResult(meta.fileName(), meta.mimeType(), meta.format(),
+                Files.readAllBytes(output)));
+    }
+
+    @Override
+    public GenerationMetadata generateTo(GenerationRequest request, OutputStream out) {
+        Objects.requireNonNull(out, "out");
+        return generateInternal(request, (output, meta) -> {
+            Files.copy(output, out);
+            out.flush();
+            return meta;
+        });
+    }
+
+    @Override
+    public GenerationMetadata generateToFile(GenerationRequest request, Path target) {
+        Objects.requireNonNull(target, "target");
+        return generateInternal(request, (output, meta) -> {
+            Files.move(output, target, StandardCopyOption.REPLACE_EXISTING);
+            return meta;
+        });
+    }
+
+    /** Delivers the produced document file to its final destination. */
+    @FunctionalInterface
+    private interface OutputDelivery<R> {
+        R deliver(Path output, GenerationMetadata metadata) throws IOException;
+    }
+
+    private <R> R generateInternal(GenerationRequest request, OutputDelivery<R> delivery) {
         if (request == null) {
             throw new InvalidGenerationRequestException("request must not be null");
         }
@@ -96,21 +131,17 @@ public class DefaultDocumentEngine implements DocumentEngine {
                 output = converted;
             }
 
-            byte[] bytes = readAllBytes(output, request.template().hint());
             String fileName = buildFileName(opts.fileNameHint(), request.template().hint(), target);
-            return new GenerationResult(fileName, target.mimeType(), target, bytes);
+            GenerationMetadata meta = new GenerationMetadata(fileName, target.mimeType(), target);
+            try {
+                return delivery.deliver(output, meta);
+            } catch (IOException e) {
+                throw new TempFileException(request.template().hint(), null, null,
+                    "failed to deliver produced document", e);
+            }
         } finally {
             tempFiles.delete(rendered);
             tempFiles.delete(converted);
-        }
-    }
-
-    private static byte[] readAllBytes(Path file, String hint) {
-        try {
-            return Files.readAllBytes(file);
-        } catch (IOException e) {
-            throw new io.github.nikolaynn.docengine.api.exception.TempFileException(
-                hint, null, null, "failed to read produced document", e);
         }
     }
 

@@ -94,6 +94,17 @@ GenerationResult result = engine.generate(request);
 // result.fileName(), result.mimeType(), result.content()
 ```
 
+Для больших документов есть стриминговые варианты — без буферизации всего результата в память:
+
+```java
+// в поток (например, HTTP-ответ); поток остаётся открытым — им владеет вызывающий
+GenerationMetadata meta = engine.generateTo(request, response.getOutputStream());
+response.setContentType(meta.mimeType());
+
+// или сразу в файл (перезаписывает существующий)
+engine.generateToFile(request, Path.of("/reports/invoice.pdf"));
+```
+
 Конвертер LibreOffice нужен только для генерации PDF. Если в `targetFormat` всегда `XLSX`, `withLibreOfficeConverter(...)` можно не вызывать (а `withDefaults()` добавляет его на всякий случай — при отсутствии `soffice` он просто не используется, пока не запрошена конвертация).
 
 `DocumentEngine` и `TempFileManager` — `AutoCloseable`: `close()` удаляет отслеживаемые временные файлы и снимает shutdown-хук. Движок — application-scoped синглтон: создайте один раз и закройте при остановке приложения (в Spring это происходит автоматически при закрытии контекста).
