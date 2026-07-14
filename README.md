@@ -95,6 +95,20 @@ GenerationResult result = engine.generate(request);
 // result.fileName(), result.mimeType(), result.content()
 ```
 
+Опции и ссылки на шаблон можно собирать эргономичнее:
+
+```java
+GenerationOptions opts = GenerationOptions.builder()
+    .fileNameHint("invoice")
+    .timeout(Duration.ofSeconds(60))
+    .build();
+
+TemplateReference ref = TemplateReference.ofBytes(templateBytes, DocumentFormat.XLSX, "invoice");
+// или из потока: TemplateReference.ofStream(in, DocumentFormat.XLSX, "invoice")
+```
+
+`GenerationOptions` — advisory-контракт: `timeout` применяет **только** процессный LibreOffice-конвертер (JXLS-рендер и пул JODConverter его игнорируют); `locale` и `engineHints` встроенный JXLS-движок не использует — их получает лишь кастомный `TemplateEngine` через `RenderContext` (в `ConvertContext` их нет, поэтому `DocumentConverter` их не видит).
+
 Для больших документов есть стриминговые варианты — без буферизации всего результата в память:
 
 ```java
@@ -198,6 +212,8 @@ doc-engine:
       pool-size: 2
       task-timeout: 120s
 ```
+
+> Свойства `doc-engine.*` снабжены config-metadata: IDE подсказывает ключи, типы и значения по умолчанию.
 
 ## Шаблоны (JXLS)
 
