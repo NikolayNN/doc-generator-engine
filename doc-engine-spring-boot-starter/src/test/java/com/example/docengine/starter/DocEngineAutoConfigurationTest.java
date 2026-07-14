@@ -6,10 +6,14 @@ import com.example.docengine.spi.TempFileManager;
 import com.example.docengine.spi.TemplateResolver;
 import com.example.docengine.spi.TemplateValidator;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.annotation.ImportCandidates;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.support.SpringFactoriesLoader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -71,6 +75,24 @@ class DocEngineAutoConfigurationTest {
             assertThat(p.converter().libreoffice().executable().toString()).endsWith("soffice");
             assertThat(p.converter().libreoffice().timeout().toSeconds()).isEqualTo(15);
         });
+    }
+
+    @Test
+    void registeredViaAutoConfigurationImportsForBoot3() {
+        ImportCandidates candidates =
+            ImportCandidates.load(AutoConfiguration.class, getClass().getClassLoader());
+
+        assertThat(candidates)
+            .as("Boot 3 loads auto-configurations only from META-INF/spring/"
+                + "org.springframework.boot.autoconfigure.AutoConfiguration.imports")
+            .contains(DocEngineAutoConfiguration.class.getName());
+    }
+
+    @Test
+    void registeredViaSpringFactoriesForBoot27() {
+        assertThat(SpringFactoriesLoader.loadFactoryNames(
+                EnableAutoConfiguration.class, getClass().getClassLoader()))
+            .contains(DocEngineAutoConfiguration.class.getName());
     }
 
     @Configuration(proxyBeanMethods = false)
