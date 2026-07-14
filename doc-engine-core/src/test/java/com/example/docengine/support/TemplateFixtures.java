@@ -78,6 +78,18 @@ public final class TemplateFixtures {
         return s;
     }
 
+    /** Formula that POI can parse but cannot evaluate (no evaluator implementation). */
+    public static byte[] unimplementedFunctionFormula() throws IOException {
+        try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sh = wb.createSheet("data");
+            Row r0 = sh.createRow(0); r0.createCell(0).setCellValue("${a}");
+            Row r1 = sh.createRow(1); r1.createCell(0).setCellFormula("PHONETIC(A1)");
+            addAreaComment(wb, sh, r0.getCell(0), 0, 0, 0, 1, "jx:area(lastCell=\"A2\")");
+            wb.write(out);
+            return out.toByteArray();
+        }
+    }
+
     public static byte[] formulas() throws IOException {
         try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sh = wb.createSheet("data");

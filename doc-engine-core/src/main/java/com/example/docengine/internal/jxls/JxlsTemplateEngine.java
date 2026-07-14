@@ -5,18 +5,18 @@ import com.example.docengine.api.exception.TemplateRenderingException;
 import com.example.docengine.spi.RenderContext;
 import com.example.docengine.spi.ResolvedTemplate;
 import com.example.docengine.spi.TemplateEngine;
-import org.apache.poi.ss.usermodel.FormulaEvaluator;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.jxls.common.Context;
+import org.jxls.transform.Transformer;
+import org.jxls.transform.poi.PoiTransformer;
 import org.jxls.util.JxlsHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -37,46 +37,28 @@ public class JxlsTemplateEngine implements TemplateEngine {
                 "unsupported source format: " + template.sourceFormat(), null);
         }
 
-        byte[] rendered = renderToBytes(template, data);
-        byte[] withFormulas = recalculateFormulas(rendered, template.hint());
-
         Path out = ctx.tempFileManager().createTempFile("doc-engine-", ".xlsx");
-        try {
-            Files.write(out, withFormulas);
-            log.debug("rendered template {} to {}", template.hint(), out);
-            return out;
-        } catch (IOException e) {
-            throw new TemplateRenderingException(template.hint(), template.sourceFormat(), null,
-                "failed to write rendered xlsx to temp file", e);
-        }
-    }
-
-    private byte[] renderToBytes(ResolvedTemplate template, Map<String, Object> data) {
-        try {
+        try (InputStream in = new ByteArrayInputStream(template.bytes());
+             OutputStream os = new BufferedOutputStream(Files.newOutputStream(out))) {
             Context jxlsCtx = new Context();
             data.forEach(jxlsCtx::putVar);
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            JxlsHelper.getInstance().processTemplate(
-                new ByteArrayInputStream(template.bytes()), out, jxlsCtx);
-            return out.toByteArray();
+
+            JxlsHelper helper = JxlsHelper.getInstance();
+            Transformer transformer = helper.createTransformer(in, os);
+            if (transformer instanceof PoiTransformer poi) {
+                // formula recalculation is delegated to the opening application
+                // (Excel / LibreOffice); POI-side evaluation would re-parse the whole
+                // workbook and fails on functions POI does not implement
+                poi.getWorkbook().setForceFormulaRecalculation(true);
+            }
+            helper.processTemplate(jxlsCtx, transformer);
+
+            log.debug("rendered template {} to {}", template.hint(), out);
+            return out;
         } catch (IOException | RuntimeException e) {
+            ctx.tempFileManager().delete(out);
             throw new TemplateRenderingException(template.hint(), template.sourceFormat(), null,
                 "JXLS failed to render template", e);
-        }
-    }
-
-    private byte[] recalculateFormulas(byte[] xlsx, String hint) {
-        try (InputStream in = new ByteArrayInputStream(xlsx);
-             Workbook wb = WorkbookFactory.create(in);
-             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
-            evaluator.evaluateAll();
-            wb.setForceFormulaRecalculation(true);
-            wb.write(out);
-            return out.toByteArray();
-        } catch (IOException | RuntimeException e) {
-            throw new TemplateRenderingException(hint, DocumentFormat.XLSX, null,
-                "failed to recalculate formulas in rendered workbook", e);
         }
     }
 }

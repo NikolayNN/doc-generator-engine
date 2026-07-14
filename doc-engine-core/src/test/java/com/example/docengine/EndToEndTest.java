@@ -115,7 +115,7 @@ class EndToEndTest {
     }
 
     @Test
-    void xlsxEvaluatesFormulasAfterSubstitution(@TempDir Path tmp) throws Exception {
+    void xlsxPreservesFormulasForRecalculationOnOpen(@TempDir Path tmp) throws Exception {
         DocumentEngine engine = newXlsxEngine(tmp);
         GenerationResult result = engine.generate(request(FORMUL,
             Map.of("a", 10, "b", 5), DocumentFormat.XLSX));
@@ -124,7 +124,12 @@ class EndToEndTest {
             Sheet sh = wb.getSheetAt(0);
             var formulaCell = sh.getRow(2).getCell(0);
             assertThat(formulaCell.getCellFormula()).isEqualToIgnoringWhitespace("A1+A2");
-            assertThat(formulaCell.getNumericCellValue()).isEqualTo(15.0);
+            assertThat(wb.getForceFormulaRecalculation())
+                .as("opening application must recalculate formulas")
+                .isTrue();
+            // correctness of the rendered formula, evaluated on the test side
+            var value = wb.getCreationHelper().createFormulaEvaluator().evaluate(formulaCell);
+            assertThat(value.getNumberValue()).isEqualTo(15.0);
         }
     }
 

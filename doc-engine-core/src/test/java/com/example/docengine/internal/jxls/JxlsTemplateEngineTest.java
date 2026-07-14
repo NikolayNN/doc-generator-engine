@@ -17,6 +17,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -76,7 +77,7 @@ class JxlsTemplateEngineTest {
     }
 
     @Test
-    void evaluatesFormulasAndCachesValues() throws Exception {
+    void preservesFormulasForRecalculationOnOpen() throws Exception {
         var template = new ResolvedTemplate(TemplateFixtures.formulas(),
             DocumentFormat.XLSX, "formulas");
         Map<String, Object> data = Map.of("a", 10, "b", 5);
@@ -87,9 +88,47 @@ class JxlsTemplateEngineTest {
             Sheet sh = wb.getSheetAt(0);
             var formulaCell = sh.getRow(2).getCell(0);
             assertThat(formulaCell.getCellFormula()).isEqualToIgnoringWhitespace("A1+A2");
-            assertThat(formulaCell.getNumericCellValue()).isEqualTo(15.0);
+            assertThat(wb.getForceFormulaRecalculation())
+                .as("opening application must recalculate formulas")
+                .isTrue();
+            // correctness of the rendered formula, evaluated on the test side
+            var value = wb.getCreationHelper().createFormulaEvaluator().evaluate(formulaCell);
+            assertThat(value.getNumberValue()).isEqualTo(15.0);
+        }
+    }
+
+    @Test
+    void rendersFormulasThatPoiCannotEvaluate() throws Exception {
+        var template = new ResolvedTemplate(TemplateFixtures.unimplementedFunctionFormula(),
+            DocumentFormat.XLSX, "phonetic");
+
+        Path out = engine.render(template, Map.of("a", "text"), ctx());
+
+        try (Workbook wb = WorkbookFactory.create(Files.newInputStream(out))) {
+            var formulaCell = wb.getSheetAt(0).getRow(1).getCell(0);
+            assertThat(formulaCell.getCellFormula()).contains("PHONETIC");
             assertThat(wb.getForceFormulaRecalculation()).isTrue();
         }
+    }
+
+    @Test
+    void deletesTempFileWhenRenderingFails(@TempDir Path tmp) throws Exception {
+        Path bogus = tmp.resolve("no-such-dir").resolve("out.xlsx");
+        List<Path> deleted = new ArrayList<>();
+        TempFileManager recording = new TempFileManager() {
+            @Override public Path createTempFile(String prefix, String suffix) { return bogus; }
+            @Override public void delete(Path path) { deleted.add(path); }
+        };
+        var template = new ResolvedTemplate(TemplateFixtures.simpleFields(),
+            DocumentFormat.XLSX, "leak");
+
+        assertThatThrownBy(() -> engine.render(template, Map.of("greeting", "g", "name", "n"),
+                new RenderContext(null, null, Map.of(), recording, "test")))
+            .isInstanceOf(TemplateRenderingException.class);
+
+        assertThat(deleted)
+            .as("temp file created by render must be deleted when rendering fails")
+            .contains(bogus);
     }
 
     @Test
