@@ -22,7 +22,7 @@ import java.util.Objects;
  * Fluent builder for a plain-Java {@link DocumentEngine}. Start with
  * {@link #create()}, add components (or {@link #withDefaults()}), then
  * {@link #build()}. At least one template engine and a temp-file manager are
- * required; a resolver and validator default to no-op implementations.
+ * required; the validator defaults to a no-op, and the resolver defaults to a stream/byte-based resolver that handles {@code BytesRef}/{@code InputStreamRef} references.
  */
 public final class DocumentEngineBuilder {
 
