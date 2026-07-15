@@ -8,13 +8,11 @@ import io.github.nikolaynn.docengine.spi.TemplateValidator;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.annotation.ImportCandidates;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.support.SpringFactoriesLoader;
 
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
@@ -129,13 +127,6 @@ class DocEngineAutoConfigurationTest {
                 + "org.springframework.boot.autoconfigure.AutoConfiguration.imports")
             .contains(DocEngineAutoConfiguration.class.getName());
         assertThat(candidates).contains(JodConverterAutoConfiguration.class.getName());
-    }
-
-    @Test
-    void registeredViaSpringFactoriesForBoot27() {
-        assertThat(SpringFactoriesLoader.loadFactoryNames(
-                EnableAutoConfiguration.class, getClass().getClassLoader()))
-            .contains(DocEngineAutoConfiguration.class.getName());
     }
 
     @Test

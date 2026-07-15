@@ -12,11 +12,11 @@ import io.github.nikolaynn.docengine.spi.TempFileManager;
 import io.github.nikolaynn.docengine.spi.TemplateEngine;
 import io.github.nikolaynn.docengine.spi.TemplateResolver;
 import io.github.nikolaynn.docengine.spi.TemplateValidator;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
@@ -38,7 +38,7 @@ import java.util.List;
  * {@code libreOfficeConverter}/{@code jodDocumentConverter} as your own beans alongside the new
  * one) or assemble the engine directly with {@code DocumentEngineBuilder}.
  */
-@Configuration(proxyBeanMethods = false)
+@AutoConfiguration
 @EnableConfigurationProperties(DocEngineProperties.class)
 public class DocEngineAutoConfiguration {
 
