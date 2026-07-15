@@ -82,6 +82,35 @@ class JodDocumentConverterTest {
     }
 
     @Test
+    void buildFailureMapsToConversionException(@TempDir Path tmp) {
+        // an explicit officeHome that isn't a LibreOffice install makes
+        // LocalOfficeManager.builder().build() throw a raw IllegalStateException;
+        // it must be wrapped, not leak past the public API
+        Path bogusHome = tmp.resolve("no-such-office-home");
+        var c = new JodDocumentConverter(
+            JodDocumentConverter.Config.builder().officeHome(bogusHome).build());
+
+        assertThatThrownBy(c::start)
+            .isInstanceOf(DocumentConversionException.class);
+    }
+
+    @Test
+    void stopsPoolWhenStartFails() throws Exception {
+        // a partial start may have already spawned pool processes; they must be
+        // released, otherwise close() (which skips stop() when started==false)
+        // leaks them
+        OfficeManager manager = mock(OfficeManager.class);
+        doThrow(new OfficeException("start boom")).when(manager).start();
+        var c = new JodDocumentConverter(manager, Duration.ofSeconds(5));
+
+        assertThatThrownBy(c::start)
+            .isInstanceOf(DocumentConversionException.class)
+            .hasMessageContaining("start boom");
+
+        verify(manager).stop();
+    }
+
+    @Test
     void convertAfterCloseThrowsIllegalState(@TempDir Path tmp) throws Exception {
         var c = new JodDocumentConverter(mock(OfficeManager.class), Duration.ofSeconds(5));
         c.close();

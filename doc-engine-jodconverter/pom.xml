@@ -19,11 +19,6 @@
             <artifactId>doc-engine-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.github.nikolaynn</groupId>
-            <artifactId>doc-engine-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.jodconverter</groupId>
             <artifactId>jodconverter-local</artifactId>
         </dependency>
@@ -32,6 +27,11 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>io.github.nikolaynn</groupId>
+            <artifactId>doc-engine-core</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

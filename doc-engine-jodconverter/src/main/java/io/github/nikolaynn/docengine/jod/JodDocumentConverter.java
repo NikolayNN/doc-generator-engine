@@ -116,13 +116,27 @@ public final class JodDocumentConverter implements DocumentConverter {
         }
         if (officeManager == null) {
             // построение отложено сюда: LocalOfficeManager.builder() валидирует
-            // officeHome и падает на машинах без установленного LibreOffice
-            officeManager = buildManager(config);
+            // officeHome и падает (raw IllegalStateException/IllegalArgumentException)
+            // на машинах без установленного LibreOffice — оборачиваем, чтобы сырые
+            // исключения не утекали за публичный API
+            try {
+                officeManager = buildManager(config);
+            } catch (RuntimeException e) {
+                throw new DocumentConversionException(null, DocumentFormat.XLSX, DocumentFormat.PDF,
+                    "failed to build LibreOffice pool: " + e.getMessage(), e, false);
+            }
         }
         try {
             officeManager.start();
             started = true;
         } catch (OfficeException e) {
+            // частичный старт мог уже поднять часть процессов пула; останавливаем,
+            // чтобы они не утекли (close() их не тронет, т.к. started остаётся false),
+            // и сбрасываем построенный менеджер, чтобы следующая попытка начала с чистого
+            stopQuietly(officeManager);
+            if (config != null) {
+                officeManager = null;
+            }
             throw new DocumentConversionException(null, DocumentFormat.XLSX, DocumentFormat.PDF,
                 "failed to start LibreOffice pool: " + e.getMessage(), e, false);
         }
@@ -187,11 +201,19 @@ public final class JodDocumentConverter implements DocumentConverter {
         }
         closed = true;
         if (started) {
-            try {
-                officeManager.stop();
-            } catch (OfficeException e) {
-                log.warn("failed to stop LibreOffice pool: {}", e.getMessage());
-            }
+            stopQuietly(officeManager);
+        }
+    }
+
+    /** Best-effort stop that logs rather than propagates, for cleanup paths. */
+    private static void stopQuietly(OfficeManager manager) {
+        if (manager == null) {
+            return;
+        }
+        try {
+            manager.stop();
+        } catch (OfficeException e) {
+            log.warn("failed to stop LibreOffice pool: {}", e.getMessage());
         }
     }
 

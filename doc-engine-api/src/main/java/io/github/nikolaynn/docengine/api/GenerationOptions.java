@@ -59,6 +59,19 @@ public record GenerationOptions(
         return new Builder();
     }
 
+    /**
+     * A builder pre-populated with this instance's values, for producing a
+     * modified copy by tweaking individual fields.
+     */
+    public Builder toBuilder() {
+        Builder b = new Builder();
+        b.fileNameHint = fileNameHint;
+        b.timeout = timeout;
+        b.locale = locale;
+        b.engineHints = new LinkedHashMap<>(engineHints);
+        return b;
+    }
+
     /** Mutable builder for {@link GenerationOptions}. */
     public static final class Builder {
         private String fileNameHint;

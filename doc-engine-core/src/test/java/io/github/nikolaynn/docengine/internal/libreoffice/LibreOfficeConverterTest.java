@@ -118,6 +118,39 @@ class LibreOfficeConverterTest {
     }
 
     @Test
+    void cleansUpOutputDirAfterTimeoutKill(@TempDir Path tmp) throws Exception {
+        // The converter force-kills soffice on timeout, then deletes its private
+        // outDir. destroyForcibly() is asynchronous, so on Windows a still-alive
+        // process keeps a handle on files under outDir (soffice's UserInstallation
+        // profile) and the delete silently fails, leaking the dir. The converter
+        // must wait for the kill to complete before cleaning up. outDir lives under
+        // a self-managed side dir (not @TempDir, whose eager cleanup would itself
+        // race the killed process's handle release).
+        Path workingDir = Files.createTempDirectory("doc-engine-leak-test-");
+        try {
+            Path exe = createFakeSoffice(workingDir, Map.of(
+                "fake.holdOutdirHandle", "true",
+                "fake.sleepMs", "60000"));
+            var c = new LibreOfficeConverter(exe, Duration.ofSeconds(4), workingDir);
+            TempFileManager tfm = new DefaultTempFileManager(tmp, false);
+
+            assertThatThrownBy(() -> c.convert(stubInput(tmp, "held"), DocumentFormat.XLSX, DocumentFormat.PDF,
+                    new ConvertContext(Duration.ofSeconds(4), tfm, "tpl")))
+                .isInstanceOf(DocumentConversionException.class)
+                .hasMessageContaining("timeout");
+
+            try (var entries = Files.list(workingDir)) {
+                assertThat(entries.filter(p -> Files.isDirectory(p)
+                        && p.getFileName().toString().startsWith("doc-engine-libo-")))
+                    .as("outDir must be deleted even though the killed process held a handle inside it")
+                    .isEmpty();
+            }
+        } finally {
+            bestEffortDeleteRecursively(workingDir);
+        }
+    }
+
+    @Test
     void drainsStdoutSoLargeOutputDoesNotDeadlock(@TempDir Path tmp) throws Exception {
         Path exe = createFakeSoffice(tmp, Map.of(
             "fake.stdoutBytes", "2000000",

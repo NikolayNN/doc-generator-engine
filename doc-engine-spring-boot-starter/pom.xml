@@ -17,7 +17,6 @@
         <dependency>
             <groupId>io.github.nikolaynn</groupId>
             <artifactId>doc-engine-core</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.nikolaynn</groupId>

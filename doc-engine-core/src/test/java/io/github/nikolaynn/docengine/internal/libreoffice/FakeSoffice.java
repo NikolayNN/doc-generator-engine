@@ -1,5 +1,6 @@
 package io.github.nikolaynn.docengine.internal.libreoffice;
 
+import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +20,8 @@ import java.util.List;
  *   fake.sleepMs      - sleep this long before writing stderr / creating output
  *   fake.stderrText   - line to print to stderr
  *   fake.createOutput - parse --outdir from args and create "&lt;input-stem&gt;.pdf" there
+ *   fake.holdOutdirHandle - open and hold a file under --outdir (mimics soffice
+ *                       keeping its UserInstallation profile locked), never closed
  *   fake.exit         - exit code (default 0)
  */
 public final class FakeSoffice {
@@ -45,6 +48,21 @@ public final class FakeSoffice {
                 .redirectOutput(ProcessBuilder.Redirect.DISCARD)
                 .redirectError(ProcessBuilder.Redirect.DISCARD)
                 .start();
+        }
+
+        if (Boolean.getBoolean("fake.holdOutdirHandle")) {
+            Path outDir = parseOutdir(args);
+            if (outDir != null) {
+                // java.io stream: unlike NIO's Files.newOutputStream it does NOT
+                // grant FILE_SHARE_DELETE on Windows, so the file — and thus outDir
+                // — cannot be deleted while this process holds it (mimics soffice's
+                // locked UserInstallation profile). Left open on purpose so a forced
+                // kill must fully tear this process down before cleanup can succeed.
+                @SuppressWarnings("resource")
+                FileOutputStream held = new FileOutputStream(outDir.resolve("held.lock").toFile());
+                held.write('x');
+                held.flush();
+            }
         }
 
         int stdoutBytes = Integer.getInteger("fake.stdoutBytes", 0);
@@ -77,12 +95,7 @@ public final class FakeSoffice {
         }
 
         if (Boolean.getBoolean("fake.createOutput")) {
-            Path outDir = null;
-            for (int i = 0; i < args.length - 1; i++) {
-                if ("--outdir".equals(args[i])) {
-                    outDir = Path.of(args[i + 1]);
-                }
-            }
+            Path outDir = parseOutdir(args);
             Path input = Path.of(args[args.length - 1]);
             String base = input.getFileName().toString();
             int dot = base.lastIndexOf('.');
@@ -91,6 +104,15 @@ public final class FakeSoffice {
         }
 
         System.exit(Integer.getInteger("fake.exit", 0));
+    }
+
+    private static Path parseOutdir(String[] args) {
+        for (int i = 0; i < args.length - 1; i++) {
+            if ("--outdir".equals(args[i])) {
+                return Path.of(args[i + 1]);
+            }
+        }
+        return null;
     }
 
     static String javaExecutable() {

@@ -18,13 +18,24 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 public class LibreOfficeConverter implements DocumentConverter {
 
     private static final Logger log = LoggerFactory.getLogger(LibreOfficeConverter.class);
     private static final int STDERR_TRUNCATE = 2000;
+    // grace period to wait for force-killed processes to actually exit and release
+    // their handles (e.g. the soffice UserInstallation profile under outDir) before
+    // the caller deletes that directory
+    private static final Duration PROCESS_KILL_WAIT = Duration.ofSeconds(5);
+    // Windows releases a dead process's file handles slightly AFTER it is reported
+    // terminated, so a just-freed file can stay briefly undeletable; retry deletes
+    // within this bound before giving up
+    private static final Duration HANDLE_RELEASE_WAIT = Duration.ofSeconds(2);
     // native processes emit stderr in the platform charset (e.g. Cp1252/Cp1251 on
     // Windows), not necessarily UTF-8 or this JVM's default
     private static final Charset PROCESS_OUTPUT_CHARSET = processOutputCharset();
@@ -185,9 +196,31 @@ public class LibreOfficeConverter implements DocumentConverter {
     private static void destroyProcessTree(Process process) {
         // snapshot descendants before killing the parent: soffice is a launcher whose
         // soffice.bin child does the work and gets re-parented once the launcher dies
-        List<ProcessHandle> descendants = process.toHandle().descendants().toList();
-        process.destroyForcibly();
-        descendants.forEach(ProcessHandle::destroyForcibly);
+        List<ProcessHandle> tree = new ArrayList<>();
+        tree.add(process.toHandle());
+        tree.addAll(process.toHandle().descendants().toList());
+        tree.forEach(ProcessHandle::destroyForcibly);
+        // destroyForcibly() is asynchronous; wait (bounded) for the processes to
+        // actually terminate before returning. The caller deletes outDir right
+        // after, and on Windows a still-alive soffice.bin keeps a handle on its
+        // UserInstallation profile under outDir, so an immediate delete would
+        // silently fail and leak the directory.
+        awaitExit(tree);
+    }
+
+    private static void awaitExit(List<ProcessHandle> handles) {
+        CompletableFuture<?>[] exits = handles.stream()
+            .map(ProcessHandle::onExit)
+            .toArray(CompletableFuture[]::new);
+        try {
+            CompletableFuture.allOf(exits).get(PROCESS_KILL_WAIT.toMillis(), TimeUnit.MILLISECONDS);
+        } catch (TimeoutException | ExecutionException e) {
+            // best-effort: a process may outlive the grace period; the ensuing
+            // temp-dir delete is itself best-effort and will just leave a leftover
+            log.warn("killed LibreOffice process did not exit within {}", PROCESS_KILL_WAIT);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static Charset processOutputCharset() {
@@ -210,11 +243,32 @@ public class LibreOfficeConverter implements DocumentConverter {
     private static void deleteRecursively(Path dir) {
         if (dir == null) return;
         try (Stream<Path> walk = Files.walk(dir)) {
-            walk.sorted(Comparator.reverseOrder()).forEach(p -> {
-                try { Files.deleteIfExists(p); } catch (IOException ignored) {}
-            });
+            walk.sorted(Comparator.reverseOrder()).forEach(LibreOfficeConverter::deleteWithRetry);
         } catch (IOException ignored) {
             // best-effort cleanup
+        }
+    }
+
+    private static void deleteWithRetry(Path p) {
+        // a just-killed soffice releases its handles asynchronously on Windows, so a
+        // file/dir under its profile can be briefly undeletable even after the
+        // process is reported dead; retry within a short bound before giving up
+        long deadline = System.nanoTime() + HANDLE_RELEASE_WAIT.toNanos();
+        while (true) {
+            try {
+                Files.deleteIfExists(p);
+                return;
+            } catch (IOException e) {
+                if (System.nanoTime() >= deadline) {
+                    return; // best-effort: leave the leftover rather than block indefinitely
+                }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
         }
     }
 }

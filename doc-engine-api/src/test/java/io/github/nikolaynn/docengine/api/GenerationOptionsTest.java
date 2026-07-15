@@ -58,4 +58,22 @@ class GenerationOptionsTest {
         assertThat(opts.locale()).isNull();
         assertThat(opts.engineHints()).isEmpty();
     }
+
+    @Test
+    void toBuilderRoundTripsAllFields() {
+        var original = new GenerationOptions("report", Duration.ofSeconds(30),
+            Locale.GERMANY, Map.of("k", "v"));
+        assertThat(original.toBuilder().build()).isEqualTo(original);
+    }
+
+    @Test
+    void toBuilderAllowsSelectiveOverride() {
+        var original = new GenerationOptions("report", Duration.ofSeconds(30),
+            Locale.GERMANY, Map.of("k", "v"));
+        var modified = original.toBuilder().timeout(Duration.ofSeconds(5)).build();
+        assertThat(modified.timeout()).isEqualTo(Duration.ofSeconds(5));
+        assertThat(modified.fileNameHint()).isEqualTo("report");
+        assertThat(modified.locale()).isEqualTo(Locale.GERMANY);
+        assertThat(modified.engineHints()).containsExactly(entry("k", "v"));
+    }
 }
