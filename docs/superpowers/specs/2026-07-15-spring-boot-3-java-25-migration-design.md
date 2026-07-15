@@ -133,6 +133,29 @@ and the `AutoConfiguration.imports` file need **no** change.
   Mockito java-agent explicitly via a surefire `-javaagent` argLine. Warning, not
   a failure.
 
+## Execution note (2026-07-15)
+
+Two details of the shipped implementation differ from the version table above and
+were verified green on JDK 25:
+
+- **Mockito is `5.23.0` (not `5.18.0`), and `net.bytebuddy:byte-buddy` +
+  `byte-buddy-agent` are explicitly pinned to `1.18.11`** in the parent
+  `dependencyManagement`. byte-buddy formally supports Java 25 (class file 69)
+  only from `1.18.9`; both Mockito 5.18 and 5.23 still bundle byte-buddy
+  `< 1.18.9`, which would otherwise force `-Dnet.bytebuddy.experimental=true`. The
+  explicit pin is what actually honors this design's "no experimental byte-buddy
+  flag" requirement. Follow-up: drop the pin once a Mockito release bundles
+  byte-buddy `>= 1.18.9`.
+- **The starter POM gained an explicit `annotationProcessorPaths` for
+  `spring-boot-configuration-processor`** plus a surefire `argLine`
+  (`@{argLine} -XX:+EnableDynamicAgentLoading -Xshare:off`). A JDK-23+ Maven host
+  no longer auto-discovers classpath annotation processors (which left the
+  generated config metadata empty), and the argLine keeps Mockito-agent/CDS test
+  output pristine. This is beyond the "parent-pom-only" scope but is the standard
+  Spring Boot pattern; `@{argLine}` preserves JaCoCo's coverage agent.
+
+The POI and jodconverter `--add-opens` contingencies above were NOT needed.
+
 ## Rollback
 
 The change is confined to POM properties, two annotations, one deleted resource,

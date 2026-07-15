@@ -20,6 +20,24 @@
 
 ---
 
+## Execution note (as shipped)
+
+Two version details differ from the plan text above, decided during execution and
+verified green on JDK 25:
+- **Mockito is `5.23.0` (not `5.18.0`), with `net.bytebuddy:byte-buddy` +
+  `byte-buddy-agent` pinned to `1.18.11`** in the parent `dependencyManagement` —
+  byte-buddy formally supports Java 25 only from `1.18.9`, and both Mockito 5.18
+  and 5.23 bundle an older byte-buddy, so the explicit pin is required to avoid
+  the experimental flag. Follow-up: drop the pin once a Mockito bundles
+  byte-buddy `>= 1.18.9`.
+- **The starter POM gained `annotationProcessorPaths` (for
+  `spring-boot-configuration-processor`) + a surefire `argLine`**
+  (`@{argLine} -XX:+EnableDynamicAgentLoading -Xshare:off`), because a JDK-25
+  Maven host no longer auto-discovers classpath annotation processors. This
+  extends Task 2 beyond "parent-pom-only," using Spring Boot's standard pattern.
+
+---
+
 ## File Structure
 
 - `pom.xml` (parent) — all version properties and plugin versions. **Task 2.**
