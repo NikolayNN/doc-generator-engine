@@ -256,6 +256,51 @@ class DefaultDocumentEngineTest {
     }
 
     @Test
+    void closeDoesNotCloseDelegatesWhenNotOwned() {
+        AtomicBoolean converterClosed = new AtomicBoolean();
+        AtomicBoolean tfmClosed = new AtomicBoolean();
+        DocumentConverter converter = new DocumentConverter() {
+            @Override public boolean supports(DocumentFormat from, DocumentFormat to) { return false; }
+            @Override public Path convert(Path input, DocumentFormat from, DocumentFormat to, ConvertContext ctx) {
+                throw new UnsupportedOperationException();
+            }
+            @Override public void close() { converterClosed.set(true); }
+        };
+        TempFileManager manager = new TempFileManager() {
+            @Override public Path createTempFile(String prefix, String suffix) {
+                throw new UnsupportedOperationException();
+            }
+            @Override public void delete(Path path) {}
+            @Override public void close() { tfmClosed.set(true); }
+        };
+        // closeDelegates=false: the delegates are owned by someone else (e.g. Spring
+        // singleton beans), so closing this engine must NOT tear them down.
+        var engine = new DefaultDocumentEngine(
+            List.of(mock(TemplateEngine.class)), List.of(converter), resolver, validator, manager, false);
+
+        engine.close();
+
+        assertThat(converterClosed).as("externally-owned converter must not be closed").isFalse();
+        assertThat(tfmClosed).as("externally-owned temp-file manager must not be closed").isFalse();
+    }
+
+    @Test
+    void closeSwallowsTempFileManagerFailure() {
+        // a throwing tempFiles.close() must not propagate out of engine.close()
+        TempFileManager throwingTfm = new TempFileManager() {
+            @Override public Path createTempFile(String prefix, String suffix) {
+                throw new UnsupportedOperationException();
+            }
+            @Override public void delete(Path path) {}
+            @Override public void close() { throw new RuntimeException("tfm close boom"); }
+        };
+        var engine = new DefaultDocumentEngine(
+            List.of(mock(TemplateEngine.class)), List.of(), resolver, validator, throwingTfm);
+
+        engine.close(); // must not throw
+    }
+
+    @Test
     void moveOrCopyMovesSourceToTargetWhenMovePossible(@TempDir Path tmp) throws Exception {
         Path source = Files.writeString(tmp.resolve("src.pdf"), "payload");
         Path target = tmp.resolve("out.pdf");

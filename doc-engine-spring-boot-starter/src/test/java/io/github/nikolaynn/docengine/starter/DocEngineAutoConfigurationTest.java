@@ -153,6 +153,19 @@ class DocEngineAutoConfigurationTest {
     }
 
     @Test
+    void closingEngineBeanDoesNotCloseSharedCollaboratorBeans() {
+        runner.withUserConfiguration(RecordingTempFileManagerConfig.class).run(ctx -> {
+            RecordingTempFileManager tfm = ctx.getBean(RecordingTempFileManager.class);
+            // a caller closes the injected engine (try-with-resources, own cleanup) while
+            // the context is still live: the shared collaborator beans must survive.
+            ((DocumentEngine) ctx.getBean(DocumentEngine.class)).close();
+            assertThat(tfm.closed)
+                .as("closing the engine bean must not close the shared temp-file-manager bean")
+                .isFalse();
+        });
+    }
+
+    @Test
     void contextFailsToStartWhenNoTemplateEnginesPresent() {
         runner.withUserConfiguration(SuppressJxlsConfig.class)
               .run(ctx -> assertThat(ctx)
@@ -177,5 +190,21 @@ class DocEngineAutoConfigurationTest {
     static class UserConverterConfig {
         @Bean
         DocumentConverter userConverter() { return mock(DocumentConverter.class); }
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    static class RecordingTempFileManagerConfig {
+        @Bean
+        RecordingTempFileManager tempFileManager() { return new RecordingTempFileManager(); }
+    }
+
+    /** Records whether close() was invoked, so a premature engine.close() is observable. */
+    static class RecordingTempFileManager implements TempFileManager {
+        volatile boolean closed;
+        @Override public Path createTempFile(String prefix, String suffix) {
+            throw new UnsupportedOperationException();
+        }
+        @Override public void delete(Path path) {}
+        @Override public void close() { closed = true; }
     }
 }

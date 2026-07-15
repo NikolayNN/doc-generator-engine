@@ -20,6 +20,24 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+/**
+ * Auto-configuration for the doc-engine core beans (template engine, resolver, validator,
+ * temp-file manager, document engine) and the process-based LibreOffice converter.
+ *
+ * <p><strong>Converter selection.</strong> The two built-in converters — the pooled
+ * {@code jodDocumentConverter} (present when the doc-engine-jodconverter module is on the
+ * classpath) and the process-based {@link #libreOfficeConverter} — both provide XLSX&rarr;PDF
+ * and are mutually exclusive: jod is preferred, and the LibreOffice converter is created only
+ * as a fallback when jod is absent (module missing or {@code doc-engine.converter.jod.enabled=false}).
+ *
+ * <p>Both are guarded by {@code @ConditionalOnMissingBean(DocumentConverter.class)}, so
+ * <em>registering any {@code DocumentConverter} bean of your own replaces BOTH built-ins</em>.
+ * This is intentional: it prevents two converters competing for the same conversion, so a
+ * user-supplied converter takes over entirely. To keep the built-in XLSX&rarr;PDF while also
+ * adding a converter for another format pair, declare the converters yourself (e.g. re-declare
+ * {@code libreOfficeConverter}/{@code jodDocumentConverter} as your own beans alongside the new
+ * one) or assemble the engine directly with {@code DocumentEngineBuilder}.
+ */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(DocEngineProperties.class)
 public class DocEngineAutoConfiguration {
@@ -64,6 +82,10 @@ public class DocEngineAutoConfiguration {
                                          TemplateResolver resolver,
                                          TemplateValidator validator,
                                          TempFileManager tempFiles) {
-        return new DefaultDocumentEngine(engines, converters, resolver, validator, tempFiles);
+        // closeDelegates=false: the converters and temp-file manager are their own Spring
+        // beans, closed by the container on context shutdown. The engine must not close
+        // them itself, or a caller closing the engine bean (or a redundant shutdown pass)
+        // would tear down collaborators still in use.
+        return new DefaultDocumentEngine(engines, converters, resolver, validator, tempFiles, false);
     }
 }

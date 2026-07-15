@@ -39,17 +39,39 @@ public class DefaultDocumentEngine implements DocumentEngine {
     private final TemplateResolver resolver;
     private final TemplateValidator validator;
     private final TempFileManager tempFiles;
+    private final boolean closeDelegates;
 
+    /**
+     * Creates an engine that OWNS its converters and temp-file manager, so {@link #close()}
+     * cascades to them. Use this for a self-contained, plain-Java stack (e.g. one assembled
+     * by {@code DocumentEngineBuilder}).
+     */
     public DefaultDocumentEngine(List<TemplateEngine> templateEngines,
                                  List<DocumentConverter> converters,
                                  TemplateResolver resolver,
                                  TemplateValidator validator,
                                  TempFileManager tempFiles) {
+        this(templateEngines, converters, resolver, validator, tempFiles, true);
+    }
+
+    /**
+     * @param closeDelegates whether {@link #close()} also closes the converters and the
+     *        temp-file manager. Pass {@code false} when those collaborators are owned
+     *        elsewhere (e.g. a Spring container that manages each as its own bean), so
+     *        closing this engine does not tear down objects still in use.
+     */
+    public DefaultDocumentEngine(List<TemplateEngine> templateEngines,
+                                 List<DocumentConverter> converters,
+                                 TemplateResolver resolver,
+                                 TemplateValidator validator,
+                                 TempFileManager tempFiles,
+                                 boolean closeDelegates) {
         this.templateEngines = List.copyOf(Objects.requireNonNull(templateEngines, "templateEngines"));
         this.converters = List.copyOf(Objects.requireNonNull(converters, "converters"));
         this.resolver = Objects.requireNonNull(resolver, "resolver");
         this.validator = Objects.requireNonNull(validator, "validator");
         this.tempFiles = Objects.requireNonNull(tempFiles, "tempFiles");
+        this.closeDelegates = closeDelegates;
         if (this.templateEngines.isEmpty()) {
             // fail at construction (e.g. Spring context refresh), not on the first generate()
             throw new IllegalStateException("at least one templateEngine is required");
@@ -58,6 +80,11 @@ public class DefaultDocumentEngine implements DocumentEngine {
 
     @Override
     public void close() {
+        if (!closeDelegates) {
+            // collaborators are owned elsewhere (e.g. Spring beans, or caller-supplied);
+            // closing them here would tear down objects still in use.
+            return;
+        }
         for (DocumentConverter converter : converters) {
             try {
                 converter.close();
@@ -66,7 +93,12 @@ public class DefaultDocumentEngine implements DocumentEngine {
                     converter.getClass().getSimpleName(), e.getMessage());
             }
         }
-        tempFiles.close();
+        try {
+            tempFiles.close();
+        } catch (Exception e) {
+            log.warn("failed to close temp-file manager {}: {}",
+                tempFiles.getClass().getSimpleName(), e.getMessage());
+        }
     }
 
     @Override
