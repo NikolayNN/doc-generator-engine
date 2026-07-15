@@ -45,19 +45,19 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>25</maven.compiler.release>
 
         <jxls.version>2.13.0</jxls.version>
         <jxls-poi.version>2.13.0</jxls-poi.version>
         <commons-jexl3.version>3.3</commons-jexl3.version>
         <slf4j.version>2.0.13</slf4j.version>
-        <spring-boot.version>2.7.18</spring-boot.version>
-        <jodconverter.version>4.4.9</jodconverter.version>
+        <spring-boot.version>3.5.14</spring-boot.version>
+        <jodconverter.version>4.4.11</jodconverter.version>
 
-        <junit.version>5.10.2</junit.version>
-        <mockito.version>5.11.0</mockito.version>
-        <assertj.version>3.25.3</assertj.version>
+        <junit.version>5.12.2</junit.version>
+        <mockito.version>5.23.0</mockito.version>
+        <byte-buddy.version>1.18.11</byte-buddy.version>
+        <assertj.version>3.27.3</assertj.version>
     </properties>
 
     <dependencyManagement>
@@ -118,6 +118,16 @@
                 <version>${mockito.version}</version>
             </dependency>
             <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy</artifactId>
+                <version>${byte-buddy.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy-agent</artifactId>
+                <version>${byte-buddy.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
                 <version>${assertj.version}</version>
@@ -164,22 +174,25 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.13.0</version>
+                    <version>3.14.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.2.5</version>
+                    <version>3.5.6</version>
+                    <configuration>
+                        <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>3.2.5</version>
+                    <version>3.5.6</version>
                 </plugin>
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>0.8.12</version>
+                    <version>0.8.14</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
