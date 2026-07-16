@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -73,6 +74,28 @@ class JxlsTemplateEngineTest {
             assertThat(sh.getRow(2).getCell(0).getStringCellValue()).isEqualTo("B");
             assertThat(sh.getRow(1).getCell(1).getNumericCellValue()).isEqualTo(2.0);
             assertThat(sh.getRow(2).getCell(1).getNumericCellValue()).isEqualTo(3.0);
+        }
+    }
+
+    @Test
+    void rendersNullDataValueAsBlank() throws Exception {
+        // GenerationRequest documents that data may contain null values; a null
+        // must render as an empty cell, not the literal token or "null"
+        var template = new ResolvedTemplate(TemplateFixtures.simpleFields(),
+            DocumentFormat.XLSX, "null-value");
+        Map<String, Object> data = new HashMap<>();
+        data.put("greeting", "Hello");
+        data.put("name", null);
+
+        Path out = engine.render(template, data, ctx());
+
+        try (Workbook wb = WorkbookFactory.create(Files.newInputStream(out))) {
+            Sheet sh = wb.getSheetAt(0);
+            assertThat(sh.getRow(0).getCell(0).getStringCellValue()).isEqualTo("Hello");
+            var nameCell = sh.getRow(0).getCell(1);
+            assertThat(nameCell == null ? "" : nameCell.toString())
+                .as("null data value must render as an empty cell")
+                .isEmpty();
         }
     }
 
