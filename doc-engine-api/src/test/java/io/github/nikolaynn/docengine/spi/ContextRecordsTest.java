@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -24,6 +25,38 @@ class ContextRecordsTest {
         assertThat(ctx.engineHints()).containsEntry("a", 1);
         assertThat(ctx.tempFileManager()).isSameAs(tfm);
         assertThat(ctx.templateHint()).isEqualTo("hint");
+    }
+
+    @Test
+    void renderContextToleratesNullEngineHintValues() {
+        // GenerationOptions deliberately allows null hint values, so the context
+        // built from them must not reject what the options accepted
+        Map<String, Object> hints = new LinkedHashMap<>();
+        hints.put("k", null);
+
+        var ctx = new RenderContext(null, null, hints, noopTfm(), "hint");
+
+        assertThat(ctx.engineHints()).containsEntry("k", null);
+    }
+
+    @Test
+    void renderContextPreservesEngineHintInsertionOrder() {
+        Map<String, Object> hints = new LinkedHashMap<>();
+        for (String key : new String[]{"z", "q", "a", "m", "x", "b", "f", "c", "y", "d"}) {
+            hints.put(key, key);
+        }
+
+        var ctx = new RenderContext(null, null, hints, noopTfm(), "hint");
+
+        assertThat(ctx.engineHints().keySet())
+            .containsExactly("z", "q", "a", "m", "x", "b", "f", "c", "y", "d");
+    }
+
+    private static TempFileManager noopTfm() {
+        return new TempFileManager() {
+            public Path createTempFile(String prefix, String suffix) { return null; }
+            public void delete(Path path) {}
+        };
     }
 
     @Test
