@@ -28,7 +28,7 @@ jobs:
           java-version: '25'
           cache: maven
       - name: Build and test
-        run: mvn -B verify
+        run: ./mvnw -B verify
 
   # exercises the Windows-specific paths (process-tree kill grace, handle-release
   # delete retries, native stderr charset); soffice-gated tests skip here
@@ -44,7 +44,7 @@ jobs:
           java-version: '25'
           cache: maven
       - name: Build and test
-        run: mvn -B verify
+        run: ./mvnw.cmd -B verify
 
   libreoffice-it:
     runs-on: ubuntu-latest
@@ -65,7 +65,7 @@ jobs:
       - name: Assert soffice is available
         run: soffice --version
       - name: Build and run tests including LibreOffice conversion
-        run: mvn -B verify
+        run: ./mvnw -B verify
 
   # fails a PR that introduces dependencies with known CVEs (this project has
   # pinned CVE-patched transitives twice already — catch the next one early)

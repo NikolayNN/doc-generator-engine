@@ -60,7 +60,7 @@ jobs:
         run: soffice --version
 
       - name: Set Maven project version
-        run: mvn -B versions:set -DnewVersion=$RELEASE_VERSION -DgenerateBackupPoms=false
+        run: ./mvnw -B versions:set -DnewVersion=$RELEASE_VERSION -DgenerateBackupPoms=false
 
       # draft first: GitHub Packages rejects re-deploying the same version, so
       # nothing repeatable may come after deploy. The draft stays invisible
@@ -76,7 +76,7 @@ jobs:
       - name: Deploy to GitHub Packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: mvn -B -Prelease deploy --settings .github/maven-settings.xml
+        run: ./mvnw -B -Prelease deploy --settings .github/maven-settings.xml
 
       - name: Publish GitHub Release
         env:

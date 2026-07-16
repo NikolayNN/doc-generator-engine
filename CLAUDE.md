@@ -11,7 +11,8 @@ Java-библиотека: генерация документов из XLSX-ш�
   - PowerShell: `$env:JAVA_HOME = 'C:\Users\Nikolay\.jdks\jdk-25.0.3+9'`
   - Git Bash: `export JAVA_HOME='C:\Users\Nikolay\.jdks\jdk-25.0.3+9'`
   - Симптом без этого: enforcer-ошибка `requireJavaVersion` (раньше — `invalid target release: 25`).
-- Полная сборка с тестами: `mvn -B verify`
+- Полная сборка с тестами: `./mvnw -B verify` (Maven зафиксирован wrapper-ом,
+  3.9.16 — системный `mvn` не обязателен; JAVA_HOME нужен по-прежнему).
 - В PowerShell goal-аргументы вида `-Dkey=value` местами съедаются парсером —
   используйте stop-parsing: `mvn --% -B versions:set -DnewVersion=0.3.0`.
 
