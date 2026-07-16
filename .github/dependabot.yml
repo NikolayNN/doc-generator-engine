@@ -4,7 +4,15 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    groups:
+      # majors stay as individual PRs — they deserve individual review
+      maven-minor-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
