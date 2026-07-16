@@ -21,6 +21,20 @@
         <dependency>
             <groupId>org.jxls</groupId>
             <artifactId>jxls</artifactId>
+            <exclusions>
+                <!-- jxls 2.x mistakenly ships a concrete logging backend at compile
+                     scope; consumers must stay free to pick their own slf4j binding -->
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-core</artifactId>
+                </exclusion>
+                <!-- JCL API is provided by jcl-over-slf4j (also from jxls); a second
+                     provider of org.apache.commons.logging would clash with it -->
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jxls</groupId>
@@ -29,6 +43,13 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-jexl3</artifactId>
+            <exclusions>
+                <!-- same clash: JCL classes come from jcl-over-slf4j alone -->
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
