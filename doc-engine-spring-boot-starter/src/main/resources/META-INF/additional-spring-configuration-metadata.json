@@ -9,6 +9,8 @@
     { "name": "doc-engine.converter.jod.enabled", "type": "java.lang.Boolean", "description": "Whether the pooled JODConverter is created when the module is on the classpath.", "defaultValue": true },
     { "name": "doc-engine.converter.jod.office-home", "type": "java.nio.file.Path", "description": "LibreOffice installation directory; unset auto-detects." },
     { "name": "doc-engine.converter.jod.pool-size", "type": "java.lang.Integer", "description": "Number of LibreOffice processes in the pool.", "defaultValue": 1 },
+    { "name": "doc-engine.converter.jod.base-port", "type": "java.lang.Integer", "description": "First local TCP port of the pool; process N listens on base-port+N. Co-located applications must use disjoint ranges.", "defaultValue": 2002 },
+    { "name": "doc-engine.converter.jod.existing-process-action", "type": "java.lang.String", "description": "What to do when a process already listens on a pool port: FAIL, KILL, CONNECT or CONNECT_OR_KILL. Unset keeps the JODConverter default (KILL)." },
     { "name": "doc-engine.converter.jod.task-timeout", "type": "java.time.Duration", "description": "Per-task execution timeout for the pool.", "defaultValue": "120s" },
     { "name": "doc-engine.converter.jod.task-queue-timeout", "type": "java.time.Duration", "description": "How long a task waits for a free process.", "defaultValue": "30s" },
     { "name": "doc-engine.converter.jod.max-tasks-per-process", "type": "java.lang.Integer", "description": "Restart a process after this many tasks.", "defaultValue": 200 }

@@ -81,13 +81,28 @@ class DocEngineAutoConfigurationTest {
     void jodPropertiesBind() {
         runner.withPropertyValues(
             "doc-engine.converter.jod.pool-size=3",
+            "doc-engine.converter.jod.base-port=2100",
             "doc-engine.converter.jod.task-timeout=90s",
-            "doc-engine.converter.jod.max-tasks-per-process=50"
+            "doc-engine.converter.jod.max-tasks-per-process=50",
+            "doc-engine.converter.jod.existing-process-action=connect_or_kill"
         ).run(ctx -> {
             DocEngineProperties p = ctx.getBean(DocEngineProperties.class);
             assertThat(p.converter().jod().poolSize()).isEqualTo(3);
+            assertThat(p.converter().jod().basePort()).isEqualTo(2100);
             assertThat(p.converter().jod().taskTimeout().toSeconds()).isEqualTo(90);
             assertThat(p.converter().jod().maxTasksPerProcess()).isEqualTo(50);
+            assertThat(p.converter().jod().existingProcessAction()).isEqualTo("connect_or_kill");
+        });
+    }
+
+    @Test
+    void jodPortDefaultsMatchJodConverterConvention() {
+        runner.run(ctx -> {
+            DocEngineProperties.Jod jod = ctx.getBean(DocEngineProperties.class).converter().jod();
+            assertThat(jod.basePort()).isEqualTo(2002);
+            assertThat(jod.existingProcessAction())
+                .as("unset action keeps the JODConverter default")
+                .isNull();
         });
     }
 

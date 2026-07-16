@@ -162,10 +162,19 @@ DocumentEngine engine = DocumentEngineBuilder.create()
 ```
 
 Свойства стартера (`doc-engine.converter.jod.*`): `enabled` (true),
-`office-home` (автодетект), `pool-size` (1), `task-timeout` (120s),
-`task-queue-timeout` (30s), `max-tasks-per-process` (200).
+`office-home` (автодетект), `pool-size` (1), `base-port` (2002),
+`task-timeout` (120s), `task-queue-timeout` (30s),
+`max-tasks-per-process` (200), `existing-process-action` (по умолчанию —
+дефолт JODConverter, `KILL`).
 Примечание: `GenerationOptions.timeout` этим конвертером не применяется —
 таймаут задаётся на уровне пула.
+
+> **Порты.** Каждый процесс пула слушает свой локальный TCP-порт:
+> `base-port` … `base-port + pool-size - 1`. Если на одном хосте работают
+> несколько приложений с пулом (или любой другой пользователь JODConverter),
+> задайте им непересекающиеся диапазоны — иначе стартующий позже с действием
+> `KILL` убьёт чужие LibreOffice-процессы на этих портах. `existing-process-action`
+> принимает `FAIL`, `KILL`, `CONNECT`, `CONNECT_OR_KILL`.
 
 ## Быстрый старт — Spring Boot
 
@@ -213,6 +222,7 @@ doc-engine:
     jod:                                 # если подключён doc-engine-jodconverter
       enabled: true
       pool-size: 2
+      base-port: 2002                    # у соседних приложений — свой диапазон
       task-timeout: 120s
 ```
 

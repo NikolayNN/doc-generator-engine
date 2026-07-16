@@ -7,6 +7,7 @@ import io.github.nikolaynn.docengine.spi.DocumentConverter;
 import org.jodconverter.core.office.OfficeException;
 import org.jodconverter.core.office.OfficeManager;
 import org.jodconverter.local.LocalConverter;
+import org.jodconverter.local.office.ExistingProcessAction;
 import org.jodconverter.local.office.LocalOfficeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,6 @@ import java.util.stream.IntStream;
 public final class JodDocumentConverter implements DocumentConverter {
 
     private static final Logger log = LoggerFactory.getLogger(JodDocumentConverter.class);
-    private static final int BASE_PORT = 2002;
 
     private final Config config;          // null когда менеджер внедрён напрямую (тесты)
     private final Duration taskTimeout;   // для сообщения об ошибке таймаута
@@ -54,15 +54,37 @@ public final class JodDocumentConverter implements DocumentConverter {
         this.officeManager = officeManager;
     }
 
-    /** Pool configuration; all fields optional, see builder defaults. */
+    /**
+     * Pool configuration; all fields optional, see builder defaults.
+     *
+     * <p><strong>Ports.</strong> Each pool process listens on its own local TCP port:
+     * {@code basePort}, {@code basePort + 1}, ... {@code basePort + poolSize - 1}
+     * (default base 2002, the JODConverter convention). The range must be free on the
+     * host: co-located applications (or any other JODConverter user) must be given
+     * disjoint ranges, otherwise the later starter takes over the port — with the
+     * default {@code existingProcessAction} (KILL, inherited from JODConverter) it
+     * kills whatever office process already listens there.
+     *
+     * @param existingProcessAction what JODConverter does when an office process
+     *        already listens on a pool port; {@code null} keeps the JODConverter
+     *        default (KILL, which self-heals after crashes by replacing orphaned
+     *        processes, but is destructive to a foreign pool on the same port)
+     */
     public record Config(Path officeHome,
                          int poolSize,
+                         int basePort,
                          Duration taskTimeout,
                          Duration taskQueueTimeout,
                          int maxTasksPerProcess,
-                         Path workingDir) {
+                         Path workingDir,
+                         ExistingProcessAction existingProcessAction) {
         public Config {
             if (poolSize < 1) throw new IllegalArgumentException("poolSize must be >= 1");
+            if (basePort < 1) throw new IllegalArgumentException("basePort must be >= 1");
+            if (basePort + poolSize - 1 > 65535) {
+                throw new IllegalArgumentException(
+                    "port range " + basePort + ".." + (basePort + poolSize - 1) + " exceeds 65535");
+            }
             if (maxTasksPerProcess < 1) throw new IllegalArgumentException("maxTasksPerProcess must be >= 1");
             taskTimeout = taskTimeout == null ? Duration.ofSeconds(120) : taskTimeout;
             taskQueueTimeout = taskQueueTimeout == null ? Duration.ofSeconds(30) : taskQueueTimeout;
@@ -75,21 +97,25 @@ public final class JodDocumentConverter implements DocumentConverter {
         public static final class Builder {
             private Path officeHome;
             private int poolSize = 1;
+            private int basePort = 2002;
             private Duration taskTimeout = Duration.ofSeconds(120);
             private Duration taskQueueTimeout = Duration.ofSeconds(30);
             private int maxTasksPerProcess = 200;
             private Path workingDir;
+            private ExistingProcessAction existingProcessAction;
 
             public Builder officeHome(Path v) { this.officeHome = v; return this; }
             public Builder poolSize(int v) { this.poolSize = v; return this; }
+            public Builder basePort(int v) { this.basePort = v; return this; }
             public Builder taskTimeout(Duration v) { this.taskTimeout = v; return this; }
             public Builder taskQueueTimeout(Duration v) { this.taskQueueTimeout = v; return this; }
             public Builder maxTasksPerProcess(int v) { this.maxTasksPerProcess = v; return this; }
             public Builder workingDir(Path v) { this.workingDir = v; return this; }
+            public Builder existingProcessAction(ExistingProcessAction v) { this.existingProcessAction = v; return this; }
 
             public Config build() {
-                return new Config(officeHome, poolSize, taskTimeout, taskQueueTimeout,
-                    maxTasksPerProcess, workingDir);
+                return new Config(officeHome, poolSize, basePort, taskTimeout, taskQueueTimeout,
+                    maxTasksPerProcess, workingDir, existingProcessAction);
             }
         }
     }
@@ -219,7 +245,7 @@ public final class JodDocumentConverter implements DocumentConverter {
 
     private static OfficeManager buildManager(Config config) {
         LocalOfficeManager.Builder builder = LocalOfficeManager.builder()
-            .portNumbers(IntStream.range(BASE_PORT, BASE_PORT + config.poolSize()).toArray())
+            .portNumbers(IntStream.range(config.basePort(), config.basePort() + config.poolSize()).toArray())
             .taskExecutionTimeout(config.taskTimeout().toMillis())
             .taskQueueTimeout(config.taskQueueTimeout().toMillis())
             .maxTasksPerProcess(config.maxTasksPerProcess());
@@ -228,6 +254,9 @@ public final class JodDocumentConverter implements DocumentConverter {
         }
         if (config.workingDir() != null) {
             builder.workingDir(config.workingDir().toFile());
+        }
+        if (config.existingProcessAction() != null) {
+            builder.existingProcessAction(config.existingProcessAction());
         }
         return builder.build();
     }

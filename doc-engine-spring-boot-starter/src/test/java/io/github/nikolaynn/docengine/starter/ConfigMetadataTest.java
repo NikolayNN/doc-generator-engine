@@ -23,6 +23,8 @@ class ConfigMetadataTest {
             .contains("doc-engine.cleanup-on-shutdown")
             .contains("doc-engine.converter.libreoffice.timeout")
             .contains("doc-engine.converter.jod.pool-size")
+            .contains("doc-engine.converter.jod.base-port")
+            .contains("doc-engine.converter.jod.existing-process-action")
             .contains("doc-engine.converter.jod.max-tasks-per-process");
         // a default merged from additional-spring-configuration-metadata.json:
         // "120s" is the jod.task-timeout default and cannot be inferred by the

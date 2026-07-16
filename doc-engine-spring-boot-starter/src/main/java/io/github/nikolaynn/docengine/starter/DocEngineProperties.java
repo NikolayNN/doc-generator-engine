@@ -37,7 +37,7 @@ public record DocEngineProperties(
                 libreoffice = new LibreOffice(true, null, null, null);
             }
             if (jod == null) {
-                jod = new Jod(true, null, 1, null, null, 200);
+                jod = new Jod(true, null, 1, 2002, null, null, 200, null);
             }
         }
     }
@@ -62,18 +62,26 @@ public record DocEngineProperties(
      * @param enabled whether the pooled converter is created when the module is on the classpath
      * @param officeHome LibreOffice installation directory; {@code null} auto-detects
      * @param poolSize number of LibreOffice processes in the pool
+     * @param basePort first local TCP port of the pool (process N listens on basePort+N);
+     *        co-located applications must be given disjoint ranges
      * @param taskTimeout per-task execution timeout
      * @param taskQueueTimeout how long a task waits for a free process
      * @param maxTasksPerProcess restart a process after this many tasks
+     * @param existingProcessAction what to do when a process already listens on a pool
+     *        port: FAIL, KILL, CONNECT or CONNECT_OR_KILL; {@code null} keeps the
+     *        JODConverter default (KILL)
      */
     public record Jod(boolean enabled,
                       Path officeHome,
                       int poolSize,
+                      int basePort,
                       Duration taskTimeout,
                       Duration taskQueueTimeout,
-                      int maxTasksPerProcess) {
+                      int maxTasksPerProcess,
+                      String existingProcessAction) {
         public Jod {
             if (poolSize < 1) poolSize = 1;
+            if (basePort < 1) basePort = 2002;
             if (taskTimeout == null) taskTimeout = Duration.ofSeconds(120);
             if (taskQueueTimeout == null) taskQueueTimeout = Duration.ofSeconds(30);
             if (maxTasksPerProcess < 1) maxTasksPerProcess = 200;

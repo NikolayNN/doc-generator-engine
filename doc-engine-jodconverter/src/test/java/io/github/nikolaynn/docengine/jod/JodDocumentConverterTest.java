@@ -7,6 +7,7 @@ import io.github.nikolaynn.docengine.spi.ConvertContext;
 import io.github.nikolaynn.docengine.spi.TempFileManager;
 import org.jodconverter.core.office.OfficeException;
 import org.jodconverter.core.office.OfficeManager;
+import org.jodconverter.local.office.ExistingProcessAction;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -79,6 +80,36 @@ class JodDocumentConverterTest {
         c.close();
 
         verify(manager, never()).stop();
+    }
+
+    @Test
+    void configDefaultsBasePortAndLeavesProcessActionUnset() {
+        var cfg = JodDocumentConverter.Config.defaults();
+        assertThat(cfg.basePort()).isEqualTo(2002);
+        assertThat(cfg.existingProcessAction()).isNull();
+    }
+
+    @Test
+    void configBuilderSetsBasePortAndExistingProcessAction() {
+        var cfg = JodDocumentConverter.Config.builder()
+            .basePort(2100)
+            .existingProcessAction(ExistingProcessAction.FAIL)
+            .build();
+        assertThat(cfg.basePort()).isEqualTo(2100);
+        assertThat(cfg.existingProcessAction()).isEqualTo(ExistingProcessAction.FAIL);
+    }
+
+    @Test
+    void configRejectsNonPositiveBasePort() {
+        assertThatThrownBy(() -> JodDocumentConverter.Config.builder().basePort(0).build())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void configRejectsPortRangeOverflowingMaxTcpPort() {
+        assertThatThrownBy(() -> JodDocumentConverter.Config.builder()
+                .basePort(65535).poolSize(2).build())
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
