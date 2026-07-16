@@ -5,6 +5,7 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:
 
 # a newer push to the same PR/branch supersedes the in-flight build; master
 # builds are never cancelled so every commit keeps a full status
@@ -13,7 +14,9 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
-  verify:
+  # proves the library builds and tests green in an environment WITHOUT
+  # LibreOffice: the soffice-gated ITs must skip cleanly, not fail
+  verify-no-soffice:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
