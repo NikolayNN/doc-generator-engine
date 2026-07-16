@@ -21,6 +21,15 @@ jobs:
           java-version: '25'
           cache: maven
 
+      # release gate: with soffice present the LibreOffice conversion ITs run
+      # during deploy, so a tag cannot ship with a broken PDF path
+      - name: Install LibreOffice
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libreoffice-calc
+      - name: Assert soffice is available
+        run: soffice --version
+
       - name: Derive version from tag
         run: echo "RELEASE_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
 

@@ -20,6 +20,21 @@ jobs:
       - name: Build and test
         run: mvn -B verify
 
+  # exercises the Windows-specific paths (process-tree kill grace, handle-release
+  # delete retries, native stderr charset); soffice-gated tests skip here
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Build and test
+        run: mvn -B verify
+
   libreoffice-it:
     runs-on: ubuntu-latest
     steps:
