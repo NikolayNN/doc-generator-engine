@@ -5,20 +5,15 @@ import io.github.nikolaynn.docengine.api.exception.TemplateRenderingException;
 import io.github.nikolaynn.docengine.spi.RenderContext;
 import io.github.nikolaynn.docengine.spi.ResolvedTemplate;
 import io.github.nikolaynn.docengine.spi.TemplateEngine;
-import org.jxls.common.Context;
-import org.jxls.transform.Transformer;
-import org.jxls.transform.poi.PoiTransformer;
-import org.jxls.util.JxlsHelper;
+import org.jxls.transform.poi.JxlsPoiTemplateFillerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class JxlsTemplateEngine implements TemplateEngine {
@@ -38,20 +33,22 @@ public class JxlsTemplateEngine implements TemplateEngine {
         }
 
         Path out = ctx.tempFileManager().createTempFile("doc-engine-", ".xlsx");
-        try (InputStream in = new ByteArrayInputStream(template.bytes());
-             OutputStream os = new BufferedOutputStream(Files.newOutputStream(out))) {
-            Context jxlsCtx = new Context();
-            data.forEach(jxlsCtx::putVar);
-
-            JxlsHelper helper = JxlsHelper.getInstance();
-            Transformer transformer = helper.createTransformer(in, os);
-            if (transformer instanceof PoiTransformer poi) {
+        try (InputStream in = new ByteArrayInputStream(template.bytes())) {
+            JxlsPoiTemplateFillerBuilder.newInstance()
+                .withTemplate(in)
                 // formula recalculation is delegated to the opening application
                 // (Excel / LibreOffice); POI-side evaluation would re-parse the whole
-                // workbook and fails on functions POI does not implement
-                poi.getWorkbook().setForceFormulaRecalculation(true);
-            }
-            helper.processTemplate(jxlsCtx, transformer);
+                // workbook and fails on functions POI does not implement — and it is
+                // ON by default in JXLS 3 (recalculateFormulasBeforeSaving)
+                .withRecalculateFormulasBeforeSaving(false)
+                .withRecalculateFormulasOnOpening(true)
+                // the default PoiExceptionLogger only LOGS render errors and lets a
+                // broken file through; the error model requires them to fail loudly
+                .withExceptionThrower()
+                // JXLS 3 uses the passed map as its variable scope and writes
+                // jx:each run-vars into it; hand it a discardable, null-tolerant
+                // copy so unmodifiable request data keeps working
+                .buildAndFill(new LinkedHashMap<>(data), out.toFile());
 
             log.debug("rendered template {} to {}", template.hint(), out);
             return out;

@@ -25,39 +25,22 @@
         <dependency>
             <groupId>org.jxls</groupId>
             <artifactId>jxls</artifactId>
-            <exclusions>
-                <!-- jxls 2.x mistakenly ships a concrete logging backend at compile
-                     scope; consumers must stay free to pick their own slf4j binding -->
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-core</artifactId>
-                </exclusion>
-                <!-- JCL API is provided by jcl-over-slf4j (also from jxls); a second
-                     provider of org.apache.commons.logging would clash with it -->
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jxls</groupId>
             <artifactId>jxls-poi</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-jexl3</artifactId>
-            <exclusions>
-                <!-- same clash: JCL classes come from jcl-over-slf4j alone -->
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <!-- JEXL and beanutils log through commons-logging, but jxls 3.x no
+                 longer ships a JCL provider (NoClassDefFoundError: LogFactory
+                 without one); bridge JCL into slf4j -->
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
