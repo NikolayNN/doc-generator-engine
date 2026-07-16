@@ -51,8 +51,14 @@
         <jxls-poi.version>2.13.0</jxls-poi.version>
         <commons-jexl3.version>3.3</commons-jexl3.version>
         <slf4j.version>2.0.13</slf4j.version>
-        <spring-boot.version>3.5.14</spring-boot.version>
+        <spring-boot.version>3.5.16</spring-boot.version>
         <jodconverter.version>4.4.11</jodconverter.version>
+
+        <!-- CVE overrides for jxls-poi 2.13.0 transitives: POI CVE-2025-31672,
+             beanutils CVE-2025-48734, compress CVE-2023-42503/2024-25710/2024-26308 -->
+        <poi.version>5.5.1</poi.version>
+        <commons-beanutils.version>1.11.0</commons-beanutils.version>
+        <commons-compress.version>1.28.0</commons-compress.version>
 
         <junit.version>5.12.2</junit.version>
         <mockito.version>5.23.0</mockito.version>
@@ -71,6 +77,31 @@
                 <groupId>org.jxls</groupId>
                 <artifactId>jxls-poi</artifactId>
                 <version>${jxls-poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml-lite</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>${commons-beanutils.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons-compress.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
