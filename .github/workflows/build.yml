@@ -6,9 +6,16 @@ on:
   pull_request:
     branches: [master]
 
+# a newer push to the same PR/branch supersedes the in-flight build; master
+# builds are never cancelled so every commit keeps a full status
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 25
@@ -24,6 +31,7 @@ jobs:
   # delete retries, native stderr charset); soffice-gated tests skip here
   windows:
     runs-on: windows-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 25
@@ -37,6 +45,7 @@ jobs:
 
   libreoffice-it:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 25
