@@ -57,6 +57,11 @@
         <spring-boot.version>3.5.16</spring-boot.version>
         <jodconverter.version>4.4.11</jodconverter.version>
 
+        <!-- instruction-coverage floor for jacoco:check; override per run:
+             -Dcoverage.floor=0.99. Measured 2026-07-16: api 81%, core 89%,
+             jodconverter 82%, starter 100% -->
+        <coverage.floor>0.75</coverage.floor>
+
         <junit.version>5.12.2</junit.version>
         <mockito.version>5.23.0</mockito.version>
         <byte-buddy.version>1.18.11</byte-buddy.version>
@@ -289,6 +294,26 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                    </execution>
+                    <execution>
+                        <id>check-coverage</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>INSTRUCTION</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${coverage.floor}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
