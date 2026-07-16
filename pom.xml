@@ -6,7 +6,7 @@
 
     <groupId>io.github.nikolaynn</groupId>
     <artifactId>doc-generator-engine</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Document Generator Engine</name>
     <description>Java library for generating documents from XLSX templates (JXLS) with optional PDF export via headless LibreOffice.</description>
@@ -212,6 +212,21 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.14.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.4.2</version>
+                    <configuration>
+                        <archive>
+                            <manifestEntries>
+                                <!-- stable module name for JPMS consumers; without it the
+                                     name is derived from the jar file name. Each module
+                                     defines the property. -->
+                                <Automatic-Module-Name>${automatic.module.name}</Automatic-Module-Name>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

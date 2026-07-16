@@ -7,11 +7,15 @@
     <parent>
         <groupId>io.github.nikolaynn</groupId>
         <artifactId>doc-generator-engine</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>doc-engine-core</artifactId>
     <name>Document Generator Engine — Core</name>
+
+    <properties>
+        <automatic.module.name>io.github.nikolaynn.docengine.core</automatic.module.name>
+    </properties>
 
     <dependencies>
         <dependency>

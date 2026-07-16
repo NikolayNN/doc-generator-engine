@@ -7,11 +7,15 @@
     <parent>
         <groupId>io.github.nikolaynn</groupId>
         <artifactId>doc-generator-engine</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>doc-engine-jodconverter</artifactId>
     <name>Document Generator Engine — JODConverter Pool</name>
+
+    <properties>
+        <automatic.module.name>io.github.nikolaynn.docengine.jod</automatic.module.name>
+    </properties>
 
     <dependencies>
         <dependency>
