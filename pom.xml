@@ -351,8 +351,10 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <doclint>none</doclint>
-                            <failOnError>false</failOnError>
+                            <!-- 'missing' излишне шумный; html/syntax/accessibility
+                                 ловят реальные поломки разметки -->
+                            <doclint>html,syntax,accessibility</doclint>
+                            <failOnError>true</failOnError>
                             <quiet>true</quiet>
                         </configuration>
                     </plugin>
