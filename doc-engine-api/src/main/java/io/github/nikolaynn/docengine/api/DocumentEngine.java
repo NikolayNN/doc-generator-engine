@@ -3,6 +3,14 @@ package io.github.nikolaynn.docengine.api;
 import java.io.OutputStream;
 import java.nio.file.Path;
 
+/**
+ * Generates documents from office templates. An engine is an application-scoped
+ * singleton: create one, share it, close it on application shutdown.
+ *
+ * <p><strong>Thread safety.</strong> An engine must be safe for concurrent use —
+ * the bundled implementation is, and any custom SPI component plugged into an
+ * engine must be as well, since one instance serves concurrent generations.
+ */
 public interface DocumentEngine extends AutoCloseable {
 
     /** Generates the document fully buffered in memory. */

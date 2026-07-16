@@ -284,6 +284,10 @@ mvn clean install
 - `LibreOfficeConverterIT` и `EndToEndTest#pdfRoundTripWithBuilder` запускаются только при наличии `soffice` в PATH (через `@EnabledIf`); иначе пропускаются и сборка не падает.
 - `EndToEndTest#dumpSamplesToTarget` кладёт пары input/output XLSX в `target/e2e-samples/` — удобно открывать в Excel/LibreOffice для глазной проверки.
 
+## Changelog
+
+История изменений — в каталоге [changelog/](changelog/README.md).
+
 ## Дизайн
 
 Полный design-документ — [docs/superpowers/specs/2026-05-26-doc-generator-engine-design.md](docs/superpowers/specs/2026-05-26-doc-generator-engine-design.md).

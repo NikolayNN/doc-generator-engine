@@ -22,7 +22,9 @@ import java.util.Map;
  *
  * @param fileNameHint base name for the produced file (the extension is appended
  *        when missing); when {@code null} or blank a name is derived from the
- *        template hint
+ *        template hint. The hint is carried into the result metadata as-is —
+ *        unlike template-hint-derived names it is NOT sanitized, so don't feed
+ *        it from untrusted input if the result name ends up in a path or header
  * @param timeout conversion timeout; honored ONLY by the process-based LibreOffice
  *        converter. The JXLS renderer and the JODConverter pool ignore it (the
  *        pool applies its own configured task timeout)
