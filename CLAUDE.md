@@ -22,7 +22,7 @@ Java-библиотека: генерация документов из XLSX-ш�
 |---|---|
 | `doc-engine-api` | публичный API + SPI, без сторонних зависимостей |
 | `doc-engine-core` | реализации: JXLS-движок, LibreOffice-конвертер, `DocumentEngineBuilder` |
-| `doc-engine-spring-boot-starter` | автоконфигурация Spring Boot 3.x поверх core |
+| `doc-engine-spring-boot-starter` | автоконфигурация Spring Boot 4.x поверх core |
 | `doc-engine-jodconverter` | пул тёплых LibreOffice-процессов (JODConverter), зависит только от api |
 
 ## Тесты

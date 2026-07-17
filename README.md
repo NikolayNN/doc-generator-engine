@@ -10,7 +10,7 @@ Java-библиотека для генерации документов по о
 |---|---|
 | `doc-engine-api` | Публичный API и SPI (`TemplateEngine`, `DocumentConverter`, контексты, типы запроса/результата, исключения). Без сторонних зависимостей — от него зависят реализаторы SPI. |
 | `doc-engine-core` | Реализации поверх API: JXLS-движок, LibreOffice-конвертер и plain-Java входная точка `DocumentEngineBuilder`. Тянет JXLS/POI. |
-| `doc-engine-spring-boot-starter` | Spring Boot 3.x auto-configuration (`@AutoConfiguration` + `AutoConfiguration.imports`). Тонкая обёртка поверх core. |
+| `doc-engine-spring-boot-starter` | Spring Boot 4.x auto-configuration (`@AutoConfiguration` + `AutoConfiguration.imports`). Тонкая обёртка поверх core. |
 | `doc-engine-jodconverter` | Быстрая PDF-конверсия: пул долгоживущих LibreOffice-процессов (JODConverter). Зависит только от `doc-engine-api`. Опциональный модуль. |
 
 ## Требования
